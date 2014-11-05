@@ -1,0 +1,285 @@
+\documentclass{article}
+
+\DeclareRobustCommand\package[1]{\texttt{#1}}
+
+\title{\package{ebproof} -- proof trees}
+\author{Emmanuel Beffara}
+
+\usepackage{color}
+\usepackage{fancyvrb}
+\usepackage{hyperref}
+
+\usepackage{ebproof}
+
+\newcommand\lit[1]{\texttt{#1}}
+\newcommand\cs[1]{\lit{\char`\\#1}}
+\newcommand\env[1]{\lit{#1}}
+\newcommand\opt[1]{\lit{#1}}
+\newcommand\meta[1]{$\langle$\textit{#1}$\rangle$}
+\newcommand\oarg[1]{\lit{[}\meta{#1}\lit{]}}
+\newcommand\marg[1]{\lit{\{}\meta{#1}\lit{\}}}
+
+\newenvironment{csdoc}[1]{%
+  \begin{flushleft}#1\end{flushleft}%
+  \begin{quote}%
+}{%
+  \end{quote}%
+}
+
+\newenvironment{example}{%
+  \VerbatimOut{example.tex}}{%
+  \endVerbatimOut
+  \par\noindent Code:
+  \begin{quote}
+    \VerbatimInput{example.tex}
+  \end{quote}
+  Result:
+  \begin{quote}
+    \input{example.tex}
+  \end{quote}
+}
+
+\begin{document}
+\maketitle
+
+\tableofcontents
+
+\section{Introduction}
+
+The \env{ebproof} package provides commands to typeset proof trees, in the
+style of sequent calculus and related systems.
+The structure is inspired by the
+\href{http://math.ucsd.edu/~sbuss/ResearchWeb/bussproofs/}{\package{bussproofs}}
+package, in particular proofs are built using statements that operate on a
+stack of sub-proofs, in postfix notation.
+
+\section{Usage}
+
+\subsection{Package loading}
+
+\begin{csdoc}{\cs{usepackage}\oarg{options}\lit{\{ebproof\}}}
+  Load the package.
+  The \meta{options} provide default formatting options, as described in
+  section~\ref{sec:options}.
+  Specific options may also be specified for each proof tree and for each
+  statement in a proof tree.
+\end{csdoc}
+
+\subsection{Environments}
+
+\begin{csdoc}{
+    \cs{begin}\lit{\{prooftree\}}\oarg{options}
+      \meta{statements}
+    \cs{end}\lit{\{prooftree\}}}
+  Typeset the proof tree desribed by the \meta{statements}, as described in
+  section~\ref{sec:statements}.
+  The \meta{options} provide default formatting options for the proof tree.
+  This environment can be used either in math mode or in text mode.
+  It produces a proof tree at the current position in the text flow.
+\end{csdoc}
+
+\begin{csdoc}{
+    \cs{begin}\lit{\{prooftree*\}}\oarg{options}
+      \meta{statements}
+    \cs{end}\lit{\{prooftree*\}}}
+  Typeset the proof centered on a line of its own; it is essentially
+  equivalent to wrapping the \env{prooftree} environment inside a \env{center}
+  environment.
+\end{csdoc}
+
+\subsection{Statements}
+\label{sec:statements}
+
+The basic statements for building proofs are:
+\begin{csdoc}{\cs{Hypo}\oarg{options}\marg{text}}
+  Make a hypothesis, i.e.
+  a leaf in the proof tree, with no line above.
+\end{csdoc}
+\begin{csdoc}{\cs{Infer}\oarg{options}\marg{arity}\oarg{label}\marg{text}}
+  Build an inference step.
+  The \meta{arity} is the number of sub-proofs, it may be any number
+  including 0 (in this case there will be a line above the conclusion but no
+  sub-proof).
+  If \meta{label} is present, it is used as the label on the right of the
+  inference line.
+  The \meta{text} is the conclusion of the rule.
+\end{csdoc}
+\begin{csdoc}{\cs{Ellipsis}\marg{label}\marg{text}}
+  Typeset vertical dots, with a label on the right, and a new conclusion.
+  No inference lines are inserted.
+\end{csdoc}
+
+Each proof tree has a vertical axis, used for alignment of successive steps.
+The position of the axis is deduced from the text of the conclusion in the
+above commands.
+If \meta{text} contains the alignment character \verb|&| then the axis is
+set at that position, otherwise the axis is set at the center of the
+conclusion text.
+For instance, successive statements like \verb|\Infer1{\Gamma&\vdash\Delta}|
+will produce conclusions aligned on the \cs{vdash} symbol.
+
+The following additional statements may be used to affect the format of the
+last proof tree on the stack:
+
+\begin{csdoc}{\cs{Alter}\marg{commands}}
+  Modify the proof with arbitrary commands, assuming that these commands do
+  not affect the size.
+  A typical use is \verb|\Alter{\color{red}}|, this will typeset the subproof
+  in red.
+\end{csdoc}
+\begin{csdoc}{\cs{Delims}\marg{left}\marg{right}}
+  Put left and right delimiters around the whole sub-proof, without changing
+  the alignment (the spacing is affected by the delimiters, however).
+  The \meta{left} text must contain an opening occurrence of \cs{left} and the
+  \meta{right} text must contain an occurrence of matching occurrence of
+  \cs{right}.
+  For instance, \verb|\Delims{\left(}{\right)}| will put the
+  sub-proof between parentheses.
+\end{csdoc}
+
+\subsection{Options}
+\label{sec:options}
+
+The formatting of trees, conclusion texts and inference rules is affected by
+options, specfied using the syntax of \package{xkeyval}.
+They can be set for a whole tree or a single statement, or even globally using
+\cs{setkeys}\lit{\{ebproof\}}\marg{options}.
+
+\subsubsection{General shape}
+
+\begin{csdoc}{\opt{updown=}\meta{boolean}}
+  If set to \lit{true}, the proofs are written upside down, with the
+  conclusion of rules set above and the premisses below.
+\end{csdoc}
+\begin{csdoc}{\opt{center=}\meta{boolean}}
+  If set to \lit{true}, the tree produced by the \env{prooftree} environment
+  will be vertically centered around the text line.
+  If set to \lit{false}, the base line of the tree will be the base line of
+  the conclusion.
+  The default value is \lit{true}.
+\end{csdoc}
+
+\subsubsection{Format of inference rules}
+
+\begin{csdoc}{\opt{rulestyle=}\meta{name}}
+  Defines the style of rules, among the following choices:
+  \begin{itemize}
+  \item \opt{none}: no inference line at all
+  \item \opt{simple}: a single line (this is the default style)
+  \item \opt{double}: two lines
+  \item \opt{dashed}: a dashed line
+  \end{itemize}
+\end{csdoc}
+\begin{csdoc}{
+    \opt{leftlabel=}\meta{text} \\
+    \opt{rightlabel=}\meta{text}}
+  The text to use as the labels of the rules, on the left and on the right
+  of the inference line.
+  Using the second optional argument in \cs{Infer} is equivalent to setting
+  the \env{rightlabel} option with the value of that argument.
+\end{csdoc}
+\begin{csdoc}{
+    \opt{template=}\meta{macro} \\
+    \opt{lefttemplate=}\meta{macro} \\
+    \opt{righttemplate=}\meta{macro}}
+  Defines how conclusions are formatted.
+  The macros are arbitrary \TeX\ code, composed in horizontal mode, with the
+  macro argument \verb|#1| standing for the actual text passed to the
+  \cs{Hypo} and \cs{Infer} statements.
+  The \opt{template} value is used for conclusions with no alignment mark.
+  The \opt{lefttemplate} and \opt{righttemplate} values are used on the left
+  and right side of the alignment mark when it is present.
+  The default value for \opt{template} is simply \verb|$#1$|, so that
+  conclusions are set in math mode.
+  The default values for \opt{lefttemplate} and \opt{righttemplate} are
+  similar, with spacing assuming that a relation symbol is put near the
+  alignment mark, so that \verb|\Infer1{A &\vdash B}| is spaced correctly.
+\end{csdoc}
+\begin{csdoc}{
+    \opt{leftlabeltemplate=}\meta{macro} \\
+    \opt{rightlabeltemplate=}\meta{macro}}
+  These macros are used to typeset the text of labels on the left and right of
+  inference lines.
+  The default values are \verb|#1| so that labels are set in plain text mode.
+\end{csdoc}
+
+\subsubsection{Dimensions}
+
+\begin{csdoc}{\opt{hsep=}\meta{dimension}}
+  The horizontal separation between sub-proofs in an inference.
+\end{csdoc}
+\begin{csdoc}{\opt{rulemargin=}\meta{dimension}}
+  The spacing above and below inference lines.
+\end{csdoc}
+\begin{csdoc}{\opt{rulesep=}\meta{dimension}}
+  The spacing between lines in double-line inferences.
+\end{csdoc}
+\begin{csdoc}{\opt{thickness=}\meta{dimension}}
+  The thickness of inference lines.
+\end{csdoc}
+\begin{csdoc}{\opt{labelsep=}\meta{dimension}}
+  The spacing between an inference lines and its labels.
+\end{csdoc}
+
+\section{Examples}
+
+\subsection{Simple proof tree}
+
+\begin{example}
+\begin{prooftree}
+  \Hypo{ \Gamma, A &\vdash B }
+  \Infer1{ \Gamma &\vdash A\to B }
+  \Hypo{ \Gamma \vdash A }
+  \Infer2{ \Gamma \vdash B }
+\end{prooftree}
+\end{example}
+
+\subsection{Templates and alignment}
+
+\begin{example}
+\begin{prooftree}[rulestyle=dashed,righttemplate={,#1}]
+  \Hypo{ABC}
+  \Infer1{&ABC}
+  \Infer1{A&BC}
+  \Infer1{AB&C}
+  \Infer1{ABC&}
+\end{prooftree}
+\end{example}
+
+\subsection{Fancy formatting}
+
+\begin{example}
+\begin{prooftree}
+  \Hypo{A}
+  \Ellipsis{$\pi_1$}{B}
+  \Hypo{b} \Alter{\color{black}} \Infer2[$\otimes$]{c} \Alter{\color{blue}}
+  \Hypo{a} \Hypo{b} \Infer2{cccccccccc}
+  \Hypo{a} \Hypo{b} \Hypo{bbb} \Infer2{x} \Infer[leftlabel=thing]2{cccccccccc}
+  \Alter{\color{red}} \Delims{\left<}{\right>_{i\in\mathbf{N}}}
+  \Hypo{foo} \Infer1{b} \Hypo{bbb} \Infer2{x} \Hypo{a}
+  \Infer2[$ax^2+bx+c$]{ccccccccc}
+  \Delims{\left.}{\right\}\pi_4}
+  \Infer[rulestyle=double]4[foo]{ddd}
+\end{prooftree}
+\end{example}
+
+\subsection{Playing with upside-down}
+
+\begin{example}
+\makeatletter
+\begin{prooftree}[template=$#1$]
+  \Hypo{1} \Hypo{2} \Infer2{3} \Hypo{4} \Infer1{5} \Infer0{6} \Infer3{7}
+  \Infer1{A} \Hypo{B} \Infer2{C} \Hypo{D} \Hypo{E} \Infer2{F}
+  \ebproof@joinh
+  \setkeys{ebproof}{updown}
+  \Hypo{a} \Hypo{b} \Infer2{c}
+  \Hypo{d} \Hypo{e} \Infer2{f}
+  \Hypo{g} \Hypo{h} \Infer2{i}
+  \ebproof@joinh
+  \ebproof@joinh
+  \setkeys{ebproof}{updown=false}
+  \ebproof@joinv
+\end{prooftree}
+\end{example}
+
+\end{document}
