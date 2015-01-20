@@ -1,7 +1,7 @@
 % This package contains macros for typesetting proof trees.
 
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{ebproof}[2013/04/06 EB's proof trees]
+\ProvidesPackage{ebproof}[2015/01/20 EB's proof trees]
 
 % The |xkeyval| package is used for the parameters in proof construction.
 % The |ifthen| package is used for some tests.
@@ -458,14 +458,15 @@
 
 % Ellipsis with vertical dots
 
-\def\ebproof@ellipsis#1#2{%
-  \ebproof@pushsimple{$\vdots$}%
-  \ebproof@pushsimple{#1}%
-  {\ebproof@hsep=\ebproof@labelsep\relax \ebproof@joinright}%
-  {\let\ebproof@rule@do=\relax \ebproof@joinv}%
+\def\ebproof@ellipsis#1#2{{%
+  \let\ebproof@rule@do\ebproof@rule@none
+  \ebproof@pushsplit{}{%
+    \setbox0=\vbox{\kern1.2ex\hbox{\ignorespaces#1}\hrule height 0pt\kern1.2ex}%
+    \vbox to\ht0{\xleaders\vbox to .8ex{\vss\hbox{.}\vss}\vfill}%
+    \rlap{ \box0}}%
+  \ebproof@joinv
   \ebproof@hypo{#2}%
-  {\let\ebproof@rule@do=\relax \ebproof@joinv}%
-  }
+  \ebproof@joinv}}
 
 %%% Environment interface
 
