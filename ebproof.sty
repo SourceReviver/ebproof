@@ -369,7 +369,9 @@
   \ebproof@push{C}%
   \endgroup}
 % To put a simple rule in a vertical join
-\let\ebproof@rule@none=\relax
+\def\ebproof@rule@none{%
+  \kern\ebproof@rulemargin
+}
 \def\ebproof@rule@simple{%
   \kern\ebproof@rulemargin
   \hrule height \ebproof@thickness\relax
