@@ -59,6 +59,8 @@
 \def\ebproof@setrightlabel{\setbox\ebproof@rightbox=\box\voidb@x}
 \KV@ebproof@centertrue
 
+\ProcessOptionsX<ebproof>
+
 %%% Storage
 
 % Proof trees are represented as a data structure that consists of the
@@ -445,12 +447,12 @@
   \@ifnextchar[{\ebproof@infer@}{\ebproof@infer@[]}}
 \def\ebproof@infer@[#1]#2{%
   \@ifnextchar[{\ebproof@infer@@{#1}{#2}}{\ebproof@infer@@{#1}{#2}[]}}
-\def\ebproof@infer@@#1#2[#3]#4{%
+\def\ebproof@infer@@#1#2[#3]#4{{%
+  \setkeys{ebproof}{#1}%
   \ebproof@joinh@multi{#2}%
   \ebproof@hypo{#4}%
-  {\setkeys{ebproof}{#1}%
-   \ifthenelse{\equal{#3}{}}{}{\setkeys{ebproof}{rightlabel={#3}}}%
-   \ebproof@joinv}}
+  \ifthenelse{\equal{#3}{}}{}{\setkeys{ebproof}{rightlabel={#3}}}%
+  \ebproof@joinv}}
 
 % Ellipsis with vertical dots
 
