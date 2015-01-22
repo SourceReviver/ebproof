@@ -79,11 +79,9 @@
 % First we provide local allocators, for temporary allocation of registers in
 % a group. Dimensions are initialized to 0pt.
 
-\newcount\ebproof@localdimens
-\ebproof@localdimens=1
 \def\ebproof@localdimen#1{%
-  \advance\ebproof@localdimens1\relax
-  \expandafter\dimendef\csname#1\endcsname\ebproof@localdimens
+  \advance\count11\@ne% \count11 is the number of the last allocated \dimen
+  \expandafter\dimendef\csname#1\endcsname=\count11%
   \csname#1\endcsname=0pt\relax}
 
 % For boxes, the allocator must be used as
@@ -92,11 +90,9 @@
 %
 % in order to set the value of the box.
 
-\newcount\ebproof@localboxes
-\ebproof@localboxes=1
 \def\ebproof@localbox#1{%
-  \advance\ebproof@localboxes1\relax
-  \expandafter\chardef\csname#1\endcsname\ebproof@localboxes
+  \advance\count14\@ne% \count14 is the number of the last allocated \box
+  \expandafter\chardef\csname#1\endcsname\count14%
   \setbox\csname#1\endcsname}
 
 % From this we deduce an allocator for data structures. This allocator
