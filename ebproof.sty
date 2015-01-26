@@ -3,53 +3,47 @@
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesPackage{ebproof}[2015/01/20 EB's proof trees]
 
-% The |xkeyval| package is used for the parameters in proof construction.
+% The |pgfkeys| package is used for the parameters in proof construction.
 % The |ifthen| package is used for some tests.
 
-\RequirePackage{xkeyval}
+\RequirePackage{pgfkeys}
 \RequirePackage{ifthen}
 
 %%% Registers
 
-\newdimen\ebproof@hsep
-\newdimen\ebproof@rulemargin
-\newdimen\ebproof@rulesep
-\newdimen\ebproof@thickness
-\newdimen\ebproof@labelsep
 \newbox\ebproof@leftbox
 \newbox\ebproof@rightbox
+\newif\ifebproof@updown
+\newif\ifebproof@center
 
 %%% Parameters
 
-\define@key{ebproof}{hsep}{\setlength\ebproof@hsep{#1}}
-\define@key{ebproof}{rulemargin}{\setlength\ebproof@rulemargin{#1}}
-\define@key{ebproof}{rulesep}{\setlength\ebproof@rulesep{#1}}
-\define@key{ebproof}{thickness}{\setlength\ebproof@thickness{#1}}
-\define@key{ebproof}{labelsep}{\setlength\ebproof@labelsep{#1}}
-\define@key{ebproof}{rulestyle}{%
-  \expandafter\let\expandafter\ebproof@rule@do\csname ebproof@rule@#1\endcsname}
-\define@boolkey{ebproof}{updown}[true]{}
-\define@key{ebproof}{template}{\def\ebproof@template##1{#1}}
-\define@key{ebproof}{lefttemplate}{\def\ebproof@lefttemplate##1{#1}}
-\define@key{ebproof}{righttemplate}{\def\ebproof@righttemplate##1{#1}}
-\define@key{ebproof}{leftlabeltemplate}{\def\ebproof@leftlabeltemplate##1{#1}}
-\define@key{ebproof}{rightlabeltemplate}{\def\ebproof@rightlabeltemplate##1{#1}}
-\define@key{ebproof}{leftlabel}{%
+\def\ebproofset#1{\pgfqkeys{/ebproof}{#1}}
+
+\ebproofset{
+hsep/.initial=1.5em,
+labelsep/.initial=0.5em,
+rulemargin/.initial=3pt,
+thickness/.initial=.4pt,
+rule code/.initial=,
+updown/.is if=ebproof@updown,
+template/.code={\def\ebproof@template##1{#1}},
+lefttemplate/.code={\def\ebproof@lefttemplate##1{#1}},
+righttemplate/.code={\def\ebproof@righttemplate##1{#1}},
+leftlabeltemplate/.code={\def\ebproof@leftlabeltemplate##1{#1}},
+rightlabeltemplate/.code={\def\ebproof@rightlabeltemplate##1{#1}},
+leftlabel/.code={%
   \def\ebproof@setleftlabel{%
-    \setbox\ebproof@leftbox=\hbox{\ebproof@leftlabeltemplate{#1}}}}
-\define@key{ebproof}{rightlabel}{%
+    \setbox\ebproof@leftbox=\hbox{\ebproof@leftlabeltemplate{#1}}}},
+rightlabel/.code={%
   \def\ebproof@setrightlabel{%
-    \setbox\ebproof@rightbox=\hbox{\ebproof@rightlabeltemplate{#1}}}}
-\define@boolkey{ebproof}{center}{}
+    \setbox\ebproof@rightbox=\hbox{\ebproof@rightlabeltemplate{#1}}}},
+center/.is if=ebproof@center
+}
 
 % Default values:
 
-\ebproof@hsep=1.5em
-\ebproof@rulemargin=3pt
-\ebproof@rulesep=2pt
-\ebproof@thickness=.4pt
-\ebproof@labelsep=0.5em
-\KV@ebproof@updownfalse
+\ebproof@updownfalse
 \def\ebproof@template#1{$#1$}
 \def\ebproof@lefttemplate#1{$#1\mathrel{}$}
 \def\ebproof@righttemplate#1{$\mathrel{}#1$}
@@ -57,9 +51,7 @@
 \def\ebproof@rightlabeltemplate#1{#1}
 \def\ebproof@setleftlabel{\setbox\ebproof@leftbox=\box\voidb@x}
 \def\ebproof@setrightlabel{\setbox\ebproof@rightbox=\box\voidb@x}
-\KV@ebproof@centertrue
-
-\ProcessOptionsX<ebproof>
+\ebproof@centertrue
 
 %%% Storage
 
@@ -188,7 +180,10 @@
   \begingroup
   \ebproof@pop{A}%
   \ebproof@pop{B}%
-  \ebproof@alloc{C}=\hbox{\box\B@box \kern\ebproof@hsep \box\A@box}%
+  \ebproof@alloc{C}=\hbox{%
+    \box\B@box
+    \kern\pgfkeysvalueof{/ebproof/hsep}%
+    \box\A@box}%
   \C@left=\B@left
   \C@right=\A@right
   \C@axis=\wd\C@box
@@ -225,11 +220,14 @@
   \begingroup
   \ebproof@pop{A}%
   \ebproof@pop{B}%
-  \ebproof@alloc{C}=\hbox{\box\B@box \kern\ebproof@hsep \copy\A@box}%
+  \ebproof@alloc{C}=\hbox{%
+    \box\B@box
+    \kern\pgfkeysvalueof{/ebproof/hsep}%
+    \copy\A@box}%
   \C@left=\B@left
   \C@right=\B@right
   \advance\C@right\wd\A@box
-  \advance\C@right\ebproof@hsep
+  \advance\C@right\pgfkeysvalueof{/ebproof/hsep}
   \ebproof@push{C}%
   \endgroup}
 
@@ -303,11 +301,18 @@
   \ebproof@localbox{R@box}=\vbox{%
     \hsize=\R@width
     \hrule width \R@width height 0pt\relax
-    \ebproof@rule@do}%
+    \kern\pgfkeysvalueof{/ebproof/rulemargin}%
+    \pgfkeysgetvalue{/ebproof/rule code}{\@rulecode}%
+    \ifx\@rulecode\@empty\else
+      \@rulecode
+      \unskip% so that only one margin is inserted if no rule is drawn
+      \kern\pgfkeysvalueof{/ebproof/rulemargin}%
+    \fi
+  }%
   % Shift things if the left box is wider than |\R@shift|
   \ifvoid\ebproof@leftbox\else
     \tmp=\wd\ebproof@leftbox
-    \advance\tmp\ebproof@labelsep
+    \advance\tmp\pgfkeysvalueof{/ebproof/labelsep}
     \ifdim\tmp>\R@shift
       \advance\tmp-\R@shift
       \advance\A@shift\tmp
@@ -328,11 +333,11 @@
   \setbox\RC@box=\hbox{%
     \ifvoid\ebproof@leftbox\else
       \copy\ebproof@leftbox
-      \kern\ebproof@labelsep
+      \kern\pgfkeysvalueof{/ebproof/labelsep}
     \fi
     \box\RC@box
     \ifvoid\ebproof@rightbox\else
-      \kern\ebproof@labelsep
+      \kern\pgfkeysvalueof{/ebproof/labelsep}
       \copy\ebproof@rightbox
     \fi}
   % Adapt the dimensions on the right if the total rule width is too large
@@ -347,7 +352,7 @@
   \ht\RC@box=\ht\R@box
   \dp\RC@box=\dp\R@box
   % Make the box
-  \ifKV@ebproof@updown
+  \ifebproof@updown
     \setbox\C@box=\vtop{%
       \moveright\A@shift\box\A@box
       \hrule height 0pt
@@ -364,31 +369,38 @@
   \fi
   \ebproof@push{C}%
   \endgroup}
-% To put a simple rule in a vertical join
-\def\ebproof@rule@none{%
-  \kern\ebproof@rulemargin
-}
-\def\ebproof@rule@simple{%
-  \kern\ebproof@rulemargin
-  \hrule height \ebproof@thickness\relax
-  \kern\ebproof@rulemargin
-  }
-\let\ebproof@rule@do=\ebproof@rule@simple
-\def\ebproof@rule@double{%
-  \kern\ebproof@rulemargin
-  \hrule height \ebproof@thickness
-  \kern\ebproof@rulesep
-  \hrule height \ebproof@thickness
-  \kern\ebproof@rulemargin}
-\def\ebproof@rule@dashed{%
-  \kern\ebproof@rulemargin%
+
+\ebproofset{
+none/.style={rule code=},
+simple/.style={rule code={%
+  \hrule height \pgfkeysvalueof{/ebproof/thickness}\relax
+  }},
+double/sep/.initial=2pt,
+double/.style={rule code={%
+  \hrule height \pgfkeysvalueof{/ebproof/thickness}
+  \kern\pgfkeysvalueof{/ebproof/double/sep}%
+  \hrule height \pgfkeysvalueof{/ebproof/thickness}
+  }},
+dashed/on/.initial=.2em,
+dashed/off/.initial=.2em,
+dashed/.style={rule code={%
   \hbox to \hsize{%
-    \kern-1pt%
-    \leaders\hbox{\kern1pt%
-      \vrule height \ebproof@thickness width 5\ebproof@thickness%
-      \kern1pt}\hfill
-    \kern-1pt}%
-  \kern\ebproof@rulemargin}
+    \@tempdima=\pgfkeysvalueof{/ebproof/dashed/off}%
+    \divide\@tempdima2%
+    \kern-\@tempdima%
+    \cleaders\hbox{%
+      \kern\@tempdima%
+      \vrule
+        height \pgfkeysvalueof{/ebproof/thickness}
+        width \pgfkeysvalueof{/ebproof/dashed/on}%
+      \kern\@tempdima
+    }\hfill
+    \kern-\@tempdima
+    }%
+  }},
+}
+
+\ebproofset{simple}
 
 %%% Modifying boxes
 
@@ -437,7 +449,7 @@
       {\ebproof@righttemplate{#2}}}}
 
 \newcommand\ebproof@hypo[2][]{%
-  {\setkeys{ebproof}{#1}\ebproof@hypo@parse#2&&\ebproof@hypo@stop}}
+  {\ebproofset{#1}\ebproof@hypo@parse#2&&\ebproof@hypo@stop}}
 
 % Build a n-ary rule
 
@@ -446,16 +458,16 @@
 \def\ebproof@infer@[#1]#2{%
   \@ifnextchar[{\ebproof@infer@@{#1}{#2}}{\ebproof@infer@@{#1}{#2}[]}}
 \def\ebproof@infer@@#1#2[#3]#4{{%
-  \setkeys{ebproof}{#1}%
+  \ebproofset{#1}%
   \ebproof@joinh@multi{#2}%
   \ebproof@hypo{#4}%
-  \ifthenelse{\equal{#3}{}}{}{\setkeys{ebproof}{rightlabel={#3}}}%
+  \ifthenelse{\equal{#3}{}}{}{\ebproofset{rightlabel={#3}}}%
   \ebproof@joinv}}
 
 % Ellipsis with vertical dots
 
 \def\ebproof@ellipsis#1#2{{%
-  \let\ebproof@rule@do\ebproof@rule@none
+  \ebproofset{rule code=}%
   \ebproof@pushsplit{}{%
     \setbox0=\vbox{\kern1.2ex\hbox{\ignorespaces#1}\hrule height 0pt\kern1.2ex}%
     \vbox to\ht0{\xleaders\vbox to .8ex{\vss\hbox{.}\vss}\vfill}%
@@ -483,7 +495,7 @@
     \PackageError{ebproof}{Malformed proof tree}{%
       Some hypotheses were declared but not used in this tree.}%
   \fi
-  \ifKV@ebproof@center
+  \ifebproof@center
     \hbox{$\vcenter{\hbox{\box\X@box}}$}%
   \else
     \box\X@box
@@ -491,14 +503,14 @@
   \global\setbox\ebproof@box@temp=\box1}
 
 \newenvironment{prooftree}[1][]{%
-  \setkeys{ebproof}{#1}%
+  \ebproofset{#1}%
   \leavevmode\ebproof@begin
 }{%
   \ebproof@end}
 
 \newenvironment{prooftree*}[1][]{%
   \center
-  \setkeys{ebproof}{#1}%
+  \ebproofset{#1}%
   \leavevmode\ebproof@begin
 }{%
   \ebproof@end

@@ -12,6 +12,9 @@
 \usepackage{hyperref}
 \usepackage{multicol}
 
+\usepackage{tikz}
+\usetikzlibrary{decorations.pathmorphing}
+
 \usepackage{ebproof}
 
 \newcommand\lit[1]{\texttt{#1}}
@@ -45,6 +48,10 @@
   \end{minipage}%
   \end{center}
 }
+
+\ebproofset{zigzag/.style={rule code={\hbox{%
+  \tikz\draw[decorate,decoration={snake,amplitude=.3ex}]
+    (0,0) -- (\hsize,0);}}}}
 
 \begin{document}
 \maketitle
@@ -80,16 +87,6 @@ section~\ref{sec:statements}) are used to create proofs and assemble them in
 inference trees.
 Other statements and various options are used to fine-tune the presentation of
 trees.
-
-\subsection{Package loading}
-
-\begin{csdoc}{\cs{usepackage}\oarg{options}\lit{\{ebproof\}}}
-  Load the package.
-  The \meta{options} provide default formatting options, as described in
-  section~\ref{sec:options}.
-  Specific options may also be specified for each proof tree and for each
-  statement in a proof tree.
-\end{csdoc}
 
 \subsection{Environments}
 
@@ -259,9 +256,20 @@ last proof tree on the stack:
 \label{sec:options}
 
 The formatting of trees, conclusion texts and inference rules is affected by
-options, specfied using the syntax of \package{xkeyval}.
-They can be set for a whole tree or a single statement, or even globally using
-\cs{setkeys}\lit{\{ebproof\}}\marg{options}.
+options, specfied using the key-value system of PGF/TikZ, provided by the
+\package{pgfkeys} package.
+All options are in the \lit{/ebproof/} path in the key tree of
+\package{pgfkeys}.
+They can be set locally for a tree or a single statement using optional
+arguments.
+
+\begin{csdoc}{\cs{ebproofset}\marg{options}}
+  Set some options.
+  The options will apply in the current scope; using this in preamble will
+  effectively set options globally.
+  Specific options may also be specified for each proof tree and for each
+  statement in a proof tree, using optional arguments.
+\end{csdoc}
 
 \subsubsection{General shape}
 
@@ -277,17 +285,69 @@ They can be set for a whole tree or a single statement, or even globally using
   The default value is \lit{true}.
 \end{csdoc}
 
-\subsubsection{Format of inference rules}
+\subsubsection{Shape of inference lines}
 
-\begin{csdoc}{\opt{rulestyle=}\meta{name}}
-  Defines the style of rules, among the following choices:
-  \begin{itemize}
-  \item \opt{none}: no inference line at all
-  \item \opt{simple}: a single line (this is the default style)
-  \item \opt{double}: two lines
-  \item \opt{dashed}: a dashed line
-  \end{itemize}
+\begin{csdoc}{\opt{simple}}
+  A simple horizontal rule is drawn.
+  This is the default style.
 \end{csdoc}
+\begin{csdoc}{\opt{none}}
+  No inference line is drawn at all.
+  A single space of the length of \lit{rulemargin} is inserted.
+\end{csdoc}
+\begin{csdoc}{\opt{double}}
+  A double line is drawn.
+  The spacing between lines is given by the \lit{double/sep} option.
+\end{csdoc}
+\begin{csdoc}{\opt{dashed}}
+  A single dashed line is drawn.
+  The length of dashes is given by the \lit{double/on} option, the spacing
+  between dashes is given by \lit{double/off}.
+\end{csdoc}
+
+\begin{example}
+  \begin{prooftree}
+    \Hypo{ \Gamma &\vdash A \to B }
+    \Infer[none]1{ \Gamma &\vdash {!A} \multimap B }
+    \Hypo{ \Delta &\vdash A }
+    \Infer1{ \Delta &\vdash {!A} }
+    \Infer0{ B \vdash B }
+    \Infer[dashed]2{ \Delta, {!A}\multimap B \vdash B }
+    \Infer2{ \Gamma, \Delta &\vdash B }
+    \Infer[double]1{ \Gamma \cup \Delta &\vdash B }
+  \end{prooftree}
+\end{example}
+
+\begin{csdoc}{\opt{rule code=}\meta{code}}
+  This option is used to define an arbitrary shape for rules.
+  The \meta{code} is used to render the rule, it is executed in vertical mode
+  in a \cs{vbox} whose \cs{hsize} is set to the width of the rule.
+  Margins above and below are inserted automatically (they can be removed by
+  setting \lit{rulemargin} to \lit{0pt}).
+
+  This option is particularly useful in a ``styles'' in the sense of
+  \package{pgfkeys} (the options above are actually styles that define the
+  value of \lit{rule code} to common useful values).
+\end{csdoc}
+
+\begin{verbatim}
+\usepackage{tikz}
+\usetikzlibrary{decorations.pathmorphing}
+\ebproofset{zigzag/.style={rule code={\hbox{%
+  \tikz\draw[decorate,decoration={snake,amplitude=.3ex}]
+    (0,0) -- (\hsize,0);}}}}
+\end{verbatim}
+\begin{example}
+\begin{prooftree}
+  \Hypo{ \Gamma &\vdash A }
+  \Infer1{ \Gamma &\vdash A, \ldots, A }
+  \Hypo{ \Delta, A, \ldots, A \vdash \Theta }
+  \Infer[zigzag]2{ \Gamma, \Delta \vdash \Theta }
+\end{prooftree}
+\end{example}
+
+\subsubsection{Labels}
+
 \begin{csdoc}{%
     \opt{leftlabel=}\meta{text} \\
     \opt{rightlabel=}\meta{text}}
@@ -329,9 +389,6 @@ They can be set for a whole tree or a single statement, or even globally using
 \begin{csdoc}{\opt{rulemargin=}\meta{dimension}}
   The spacing above and below inference lines.
 \end{csdoc}
-\begin{csdoc}{\opt{rulesep=}\meta{dimension}}
-  The spacing between lines in double-line inferences.
-\end{csdoc}
 \begin{csdoc}{\opt{thickness=}\meta{dimension}}
   The thickness of inference lines.
 \end{csdoc}
@@ -355,7 +412,7 @@ They can be set for a whole tree or a single statement, or even globally using
 \subsection{Templates and alignment}
 
 \begin{example}
-\begin{prooftree}[rulestyle=dashed,righttemplate={,#1}]
+\begin{prooftree}[dashed,righttemplate={,#1}]
   \Hypo{ABC}
   \Infer1{&ABC}
   \Infer1{A&BC}
@@ -377,7 +434,7 @@ They can be set for a whole tree or a single statement, or even globally using
   \Hypo{foo} \Infer1{b} \Hypo{bbb} \Infer2{x} \Hypo{a}
   \Infer2[$ax^2+bx+c$]{ccccccccc}
   \Delims{\left.}{\right\}\pi_4}
-  \Infer[rulestyle=double]4[foo]{ddd}
+  \Infer[double]4[foo]{ddd}
 \end{prooftree}
 \end{example}
 
@@ -389,13 +446,13 @@ They can be set for a whole tree or a single statement, or even globally using
   \Hypo{1} \Hypo{2} \Infer2{3} \Hypo{4} \Infer1{5} \Infer0{6} \Infer3{7}
   \Infer1{A} \Hypo{B} \Infer2{C} \Hypo{D} \Hypo{E} \Infer2{F}
   \ebproof@joinh
-  \setkeys{ebproof}{updown}
+  \ebproofset{updown}
   \Hypo{a} \Hypo{b} \Infer2{c}
   \Hypo{d} \Hypo{e} \Infer2{f}
   \Hypo{g} \Hypo{h} \Infer2{i}
   \ebproof@joinh
   \ebproof@joinh
-  \setkeys{ebproof}{updown=false}
+  \ebproofset{updown=false}
   \ebproof@joinv
 \end{prooftree}
 \end{example}
