@@ -1,7 +1,7 @@
 % This package contains macros for typesetting proof trees.
 
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{ebproof}[2015/01/20 EB's proof trees]
+\ProvidesPackage{ebproof}[2015/01/27 EB's proof trees]
 
 % The |pgfkeys| package is used for the parameters in proof construction.
 % The |ifthen| package is used for some tests.
@@ -23,7 +23,7 @@
 \ebproofset{
 hsep/.initial=1.5em,
 labelsep/.initial=0.5em,
-rulemargin/.initial=3pt,
+rulemargin/.initial=.7ex,
 thickness/.initial=.4pt,
 rule code/.initial=,
 updown/.is if=ebproof@updown,

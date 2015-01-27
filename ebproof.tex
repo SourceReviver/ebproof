@@ -2,14 +2,14 @@
 
 \DeclareRobustCommand\package[1]{\texttt{#1}}
 
-\title{\package{ebproof} -- proof trees}
-\author{Emmanuel Beffara}
+\title{The \package{ebproof} package}
+\author{Emmanuel Beffara \\ \url{manu@beffara.org}}
 
 \usepackage{amssymb}
 \usepackage{color}
 \usepackage{fancyvrb}
 \usepackage[a4paper]{geometry}
-\usepackage{hyperref}
+\usepackage[colorlinks=true,urlcolor=blue]{hyperref}
 \usepackage{multicol}
 
 \usepackage{tikz}
@@ -29,14 +29,14 @@
   \smallbreak\noindent{#1}%
   \begin{list}{}{%
     \topsep=1ex%
-%     \leftmargin=\parindent%
   }%
   \item
 }{%
   \end{list}%
 }
 
-\newenvironment{example}{%
+\newenvironment{example}[1]{%
+  \def\exampleoptions{#1}%
   \VerbatimOut{example.tex}}{%
   \endVerbatimOut
   \begin{center}
@@ -44,32 +44,33 @@
     \input{example.tex}
   \end{minipage}%
   \begin{minipage}{.6\textwidth}
-    \VerbatimInput{example.tex}
+    \small
+    \expandafter\VerbatimInput\expandafter[\exampleoptions]{example.tex}
   \end{minipage}%
   \end{center}
 }
 
-\ebproofset{zigzag/.style={rule code={\hbox{%
-  \tikz\draw[decorate,decoration={snake,amplitude=.3ex}]
-    (0,0) -- (\hsize,0);}}}}
+\setcounter{tocdepth}{2}
 
 \begin{document}
 \maketitle
 
-\tableofcontents
+\begin{multicols}{2}
+  \tableofcontents
+\end{multicols}
 
 \section{Introduction}
 
 The \env{ebproof} package provides commands to typeset proof trees, in the
 style of sequent calculus and related systems:
 
-\begin{example}
-\begin{prooftree}
-  \Hypo{ \Gamma, A &\vdash B }
-  \Infer1{ \Gamma &\vdash A\to B }
-  \Hypo{ \Gamma \vdash A }
-  \Infer2{ \Gamma \vdash B }
-\end{prooftree}
+\begin{example}{gobble=2}
+  \begin{prooftree}
+    \Hypo{ \Gamma, A &\vdash B }
+    \Infer1[abs]{ \Gamma &\vdash A\to B }
+    \Hypo{ \Gamma \vdash A }
+    \Infer2[app]{ \Gamma \vdash B }
+  \end{prooftree}
 \end{example}
 
 The structure is very much inspired by the
@@ -79,16 +80,7 @@ I actually wrote \package{ebproof} because there were some limitations in
 \package{bussproofs} that I did not know how to lift, and also because I did
 not like some choices in that package (and also because it was fun to write).
 
-\section{Usage}
-
-Proofs are built using statements that operate on a stack of sub-proofs.
-The main statements \cs{Hypo} and \cs{Infer} (see
-section~\ref{sec:statements}) are used to create proofs and assemble them in
-inference trees.
-Other statements and various options are used to fine-tune the presentation of
-trees.
-
-\subsection{Environments}
+\section{Environments}
 
 The package provides the \env{prooftree} environment, in a standard and
 starred variants.
@@ -119,37 +111,23 @@ displayed.
 The non-starred version is useful in order to integrate the proof into some
 larger structure, like two parts of a formula:
 
-\begin{example}
-\[
-  \begin{prooftree}
-    \Hypo{ \vdash A }
-    \Hypo{ \vdash B }
-    \Infer1{ \vdash B, C }
-    \Infer2{ \vdash A\wedge B, C }
-  \end{prooftree}
-  \quad \rightsquigarrow \quad
-  \begin{prooftree}
-    \Hypo{ \vdash A }
-    \Hypo{ \vdash B }
-    \Infer2{ \vdash A\wedge B }
-    \Infer1{ \vdash A\wedge B, C }
-  \end{prooftree}
-\]
+\begin{example}{gobble=2}
+  \[
+    \begin{prooftree}
+      \Hypo{ \vdash A }
+      \Hypo{ \vdash B } \Infer1{ \vdash B, C }
+      \Infer2{ \vdash A\wedge B, C }
+    \end{prooftree}
+    \quad \rightsquigarrow \quad
+    \begin{prooftree}
+      \Hypo{ \vdash A } \Hypo{ \vdash B }
+      \Infer2{ \vdash A\wedge B }
+      \Infer1{ \vdash A\wedge B, C }
+    \end{prooftree}
+  \]
 \end{example}
 
-% \begin{example}
-% \begin{prooftree}
-%   \Hypo{\strut \Pi_1 }
-%   \Infer[rulestyle=none]1{ A }
-%   \Hypo{ [A] }
-%   \Infer[rulestyle=none]1{ \Pi_2 }
-%   \Infer[rulestyle=none]1{ B }
-%   \Infer1{ A\to B }
-%   \Infer2{ B }
-% \end{prooftree}
-% \end{example}
-
-\subsection{Statements}
+\section{Statements}
 \label{sec:statements}
 
 Statements describes proofs in postfix notation: when typesetting a proof tree
@@ -164,7 +142,7 @@ At the beginning of a \lit{prooftree} environment, the stack is empty.
 At the end, it must contain exactly one tree, which is the one that will be
 printed.
 
-\subsubsection{Basic statements}
+\subsection{Basic statements}
 
 The basic statements for building proofs are the following, where
 \meta{options} stands for arbitrary options as described in
@@ -191,15 +169,6 @@ It is typeset in math mode by default but any kind of formatting can be used
 instead, using the \opt{template} option.
 The \meta{label} text is formatted in horizontal text mode by default.
 
-\begin{example}
-\begin{prooftree}[template=(\textbf{#1})]
-  \Hypo{ foo }
-  \Hypo{ bar }
-  \Infer1{ baz }
-  \Infer2{ quux }
-\end{prooftree}
-\end{example}
-
 Each proof tree has a vertical axis, used for alignment of successive steps.
 The position of the axis is deduced from the text of the conclusion at the
 root of the tree: if \meta{text} contains the alignment character \verb|&|
@@ -210,19 +179,19 @@ same position as the axis of the conclusion.
 If there are several premisses, it places the axis at the center between the
 left of the leftmost conclusion and the right of the rightmost conclusion:
 
-\begin{example}
-\begin{prooftree}
-  \Hypo{ &\vdash A, B, C }
-  \Infer1{ A &\vdash B, C }
-  \Infer1{ A, B &\vdash C }
-  \Hypo{ D &\vdash E }
-  \Infer2{ A, B, D &\vdash C, E }
-  \Infer1{ A, B &\vdash C, D, E }
-  \Infer1{ A &\vdash B, C, D, E }
-\end{prooftree}
+\begin{example}{gobble=2}
+  \begin{prooftree}
+    \Hypo{ &\vdash A, B, C }
+    \Infer1{ A &\vdash B, C }
+    \Infer1{ A, B &\vdash C }
+    \Hypo{ D &\vdash E }
+    \Infer2{ A, B, D &\vdash C, E }
+    \Infer1{ A, B &\vdash C, D, E }
+    \Infer1{ A &\vdash B, C, D, E }
+  \end{prooftree}
 \end{example}
 
-\subsubsection{Additional statements}
+\subsection{Additional statements}
 
 The following additional statements may be used to affect the format of the
 last proof tree on the stack:
@@ -230,19 +199,31 @@ last proof tree on the stack:
 \begin{csdoc}{\cs{Ellipsis}\marg{label}\marg{text}}
   Typeset vertical dots, with a label on the right, and a new conclusion.
   No inference lines are inserted.
-  \begin{example}
+  \begin{example}{gobble=4}
     \begin{prooftree}
       \Hypo{ \Gamma &\vdash A }
       \Ellipsis{foo}{ \Gamma &\vdash A, B }
     \end{prooftree}
   \end{example}
 \end{csdoc}
-\begin{csdoc}{\cs{Alter}\marg{commands}}
+
+\begin{csdoc}{\cs{Alter}\marg{code}}
   Modify the proof with arbitrary commands, assuming that these commands do
   not affect the size.
-  A typical use is \verb|\Alter{\color{red}}|, this will typeset the subproof
-  in red.
+  The \meta{code} is executed in an \cs{hbox} and is followed by the insertion
+  of the actual box with the current sub-proof.
+  It is mostly useful with \cs{color} commands:
+  \begin{example}{gobble=4}
+    \begin{prooftree}
+      \Hypo{ \Gamma, A &\vdash B }
+      \Infer1[abs]{ \Gamma &\vdash A\to B }
+      \Alter{\color{red}}
+      \Hypo{ \Gamma \vdash A }
+      \Infer2[app]{ \Gamma \vdash B }
+    \end{prooftree}
+  \end{example}
 \end{csdoc}
+
 \begin{csdoc}{\cs{Delims}\marg{left}\marg{right}}
   Put left and right delimiters around the whole sub-proof, without changing
   the alignment (the spacing is affected by the delimiters, however).
@@ -250,9 +231,18 @@ last proof tree on the stack:
   \meta{right} text must contain a matching occurrence of \cs{right}.
   For instance, \verb|\Delims{\left(}{\right)}| will put the
   sub-proof between parentheses.
+  \begin{example}{gobble=4}
+    \begin{prooftree}
+      \Hypo{ A_1 \vee \cdots \vee A_n }
+      \Hypo{ [A_i] }
+      \Ellipsis{}{ B }
+      \Delims{ \left( }{ \right)_{1\leq i\leq n} }
+      \Infer2{ B }
+    \end{prooftree}
+  \end{example}
 \end{csdoc}
 
-\subsection{Options}
+\section{Options}
 \label{sec:options}
 
 The formatting of trees, conclusion texts and inference rules is affected by
@@ -271,24 +261,75 @@ arguments.
   statement in a proof tree, using optional arguments.
 \end{csdoc}
 
-\subsubsection{General shape}
+\subsection{General shape}
+
+\begin{csdoc}{\opt{hsep=}\meta{dimension}}
+  The horizontal separation between sub-proofs in an inference.
+  The default value is \lit{1.5em}.
+  \begin{example}{gobble=4}
+    \begin{prooftree}[hsep=0.5em]
+      \Hypo{ A } \Hypo{ B } \Infer2{ C }
+      \Hypo{ D } \Hypo{ E } \Hypo{ F } \Infer3{ G }
+      \Hypo{ H } \Infer[hsep=3em]3{ K }
+    \end{prooftree}
+  \end{example}
+\end{csdoc}
+
+\begin{csdoc}{\opt{rulemargin=}\meta{dimension}}
+  The spacing above and below inference lines.
+  The default value is \lit{0.7ex}.
+  \begin{example}{gobble=4}
+    \begin{prooftree}[rulemargin=2ex]
+      \Hypo{ \Gamma, A &\vdash B }
+      \Infer1[abs]{ \Gamma &\vdash A\to B }
+      \Hypo{ \Gamma \vdash A }
+      \Infer2[app]{ \Gamma \vdash B }
+    \end{prooftree}
+  \end{example}
+\end{csdoc}
 
 \begin{csdoc}{\opt{updown=}\meta{boolean}}
   If set to \lit{true}, the proofs are written upside down, with the
   conclusion of rules set above and the premisses below.
+  The default value is \lit{false}.
+  \begin{example}{gobble=4}
+    \begin{prooftree}[updown]
+      \Hypo{ \Gamma, A &\vdash B }
+      \Infer1[abs]{ \Gamma &\vdash A\to B }
+      \Hypo{ \Gamma \vdash A }
+      \Infer2[app]{ \Gamma \vdash B }
+    \end{prooftree}
+  \end{example}
 \end{csdoc}
+
 \begin{csdoc}{\opt{center=}\meta{boolean}}
   If set to \lit{true}, the tree produced by the \env{prooftree} environment
   will be vertically centered around the text line.
   If set to \lit{false}, the base line of the tree will be the base line of
   the conclusion.
   The default value is \lit{true}.
+  \begin{example}{gobble=4}
+    \begin{prooftree}[center=false]
+      \Infer0{ A \vdash A }
+    \end{prooftree}
+    \qquad
+    \begin{prooftree}[center=false]
+      \Hypo{ \Gamma, A \vdash B }
+      \Infer1{ \Gamma \vdash A \to B }
+    \end{prooftree}
+  \end{example}
 \end{csdoc}
 
-\subsubsection{Shape of inference lines}
+\subsection{Shape of inference lines}
 
+The following options are predefined styles for inference rules.
+Their precise rendering is influenced by parameters specified for each style.
+Arbitrary shapes can be used using the \lit{rule code} option described
+afterwards.
 \begin{csdoc}{\opt{simple}}
   A simple horizontal rule is drawn.
+  The thickness of the rule is defined by the \lit{thickness} option, it is
+  \lit{0.4pt} by default.
   This is the default style.
 \end{csdoc}
 \begin{csdoc}{\opt{none}}
@@ -297,20 +338,23 @@ arguments.
 \end{csdoc}
 \begin{csdoc}{\opt{double}}
   A double line is drawn.
-  The spacing between lines is given by the \lit{double/sep} option.
+  The thickness of the lines is defined by the \lit{thickness} option, the
+  spacing between lines is given by the \lit{double/sep} option.
 \end{csdoc}
 \begin{csdoc}{\opt{dashed}}
   A single dashed line is drawn.
-  The length of dashes is given by the \lit{double/on} option, the spacing
-  between dashes is given by \lit{double/off}.
+  The thickness of the line is defined by the \lit{thickness} option, the
+  length of dashes is given by the \lit{dashed/on} option (\lit{0.2em} by
+  default), the spacing between dashes is given by \lit{dashed/off}
+  (\lit{0.2em} by default).
 \end{csdoc}
 
-\begin{example}
+\begin{example}{gobble=2}
   \begin{prooftree}
     \Hypo{ \Gamma &\vdash A \to B }
     \Infer[none]1{ \Gamma &\vdash {!A} \multimap B }
     \Hypo{ \Delta &\vdash A }
-    \Infer1{ \Delta &\vdash {!A} }
+    \Infer[thickness=2pt]1{ \Delta &\vdash {!A} }
     \Infer0{ B \vdash B }
     \Infer[dashed]2{ \Delta, {!A}\multimap B \vdash B }
     \Infer2{ \Gamma, \Delta &\vdash B }
@@ -328,34 +372,24 @@ arguments.
   This option is particularly useful in a ``styles'' in the sense of
   \package{pgfkeys} (the options above are actually styles that define the
   value of \lit{rule code} to common useful values).
+
+  \begin{example}{gobble=4}
+    \ebproofset{zigzag/.style={rule code={\hbox{\tikz
+      \draw[decorate,decoration={snake,amplitude=.3ex}]
+      (0,0) -- (\hsize,0);}}}}
+    \begin{prooftree}
+      \Hypo{ \Gamma &\vdash A }
+      \Infer1{ \Gamma &\vdash A, \ldots, A }
+      \Hypo{ \Delta, A, \ldots, A \vdash \Theta }
+      \Infer[zigzag]2{ \Gamma, \Delta \vdash \Theta }
+    \end{prooftree}
+  \end{example}
+  Note that this example requires the \package{tikz} package, with the
+  \package{decorations.pathmorphing} library for the \lit{snake} decoration.
 \end{csdoc}
 
-\begin{verbatim}
-\usepackage{tikz}
-\usetikzlibrary{decorations.pathmorphing}
-\ebproofset{zigzag/.style={rule code={\hbox{%
-  \tikz\draw[decorate,decoration={snake,amplitude=.3ex}]
-    (0,0) -- (\hsize,0);}}}}
-\end{verbatim}
-\begin{example}
-\begin{prooftree}
-  \Hypo{ \Gamma &\vdash A }
-  \Infer1{ \Gamma &\vdash A, \ldots, A }
-  \Hypo{ \Delta, A, \ldots, A \vdash \Theta }
-  \Infer[zigzag]2{ \Gamma, \Delta \vdash \Theta }
-\end{prooftree}
-\end{example}
+\subsection{Templates}
 
-\subsubsection{Labels}
-
-\begin{csdoc}{%
-    \opt{leftlabel=}\meta{text} \\
-    \opt{rightlabel=}\meta{text}}
-  The text to use as the labels of the rules, on the left and on the right
-  of the inference line.
-  Using the second optional argument in \cs{Infer} is equivalent to setting
-  the \env{rightlabel} option with the value of that argument.
-\end{csdoc}
 \begin{csdoc}{%
     \opt{template=}\meta{macro} \\
     \opt{lefttemplate=}\meta{macro} \\
@@ -372,6 +406,26 @@ arguments.
   The default values for \opt{lefttemplate} and \opt{righttemplate} are
   similar, with spacing assuming that a relation symbol is put near the
   alignment mark, so that \verb|\Infer1{A &\vdash B}| is spaced correctly.
+
+  \begin{example}{gobble=4}
+    \begin{prooftree}[template=(\textbf{#1})]
+      \Hypo{ foo }
+      \Hypo{ bar }
+      \Infer1{ baz }
+      \Infer2{ quux }
+    \end{prooftree}
+  \end{example}
+\end{csdoc}
+
+\subsection{Labels}
+
+\begin{csdoc}{%
+    \opt{leftlabel=}\meta{text} \\
+    \opt{rightlabel=}\meta{text}}
+  The text to use as the labels of the rules, on the left and on the right
+  of the inference line.
+  Using the second optional argument in \cs{Infer} is equivalent to setting
+  the \env{rightlabel} option with the value of that argument.
 \end{csdoc}
 \begin{csdoc}{%
     \opt{leftlabeltemplate=}\meta{macro} \\
@@ -381,80 +435,10 @@ arguments.
   The default values are \verb|#1| so that labels are set in plain text mode.
 \end{csdoc}
 
-\subsubsection{Dimensions}
-
-\begin{csdoc}{\opt{hsep=}\meta{dimension}}
-  The horizontal separation between sub-proofs in an inference.
-\end{csdoc}
-\begin{csdoc}{\opt{rulemargin=}\meta{dimension}}
-  The spacing above and below inference lines.
-\end{csdoc}
-\begin{csdoc}{\opt{thickness=}\meta{dimension}}
-  The thickness of inference lines.
-\end{csdoc}
 \begin{csdoc}{\opt{labelsep=}\meta{dimension}}
   The spacing between an inference lines and its labels.
+  The default value is \lit{0.5em}.
 \end{csdoc}
 
-\section{Examples}
-
-\subsection{Simple proof tree}
-
-\begin{example}
-\begin{prooftree}
-  \Hypo{ \Gamma, A &\vdash B }
-  \Infer1{ \Gamma &\vdash A\to B }
-  \Hypo{ \Gamma \vdash A }
-  \Infer2{ \Gamma \vdash B }
-\end{prooftree}
-\end{example}
-
-\subsection{Templates and alignment}
-
-\begin{example}
-\begin{prooftree}[dashed,righttemplate={,#1}]
-  \Hypo{ABC}
-  \Infer1{&ABC}
-  \Infer1{A&BC}
-  \Infer1{AB&C}
-  \Infer1{ABC&}
-\end{prooftree}
-\end{example}
-
-\subsection{Fancy formatting}
-
-\begin{example}
-\begin{prooftree}
-  \Hypo{A}
-  \Ellipsis{$\pi_1$}{B}
-  \Hypo{b} \Alter{\color{black}} \Infer2[$\otimes$]{c} \Alter{\color{blue}}
-  \Hypo{a} \Hypo{b} \Infer2{cccccccccc}
-  \Hypo{a} \Hypo{b} \Hypo{bbb} \Infer2{x} \Infer[leftlabel=thing]2{cccccccccc}
-  \Alter{\color{red}} \Delims{\left<}{\right>_{i\in\mathbf{N}}}
-  \Hypo{foo} \Infer1{b} \Hypo{bbb} \Infer2{x} \Hypo{a}
-  \Infer2[$ax^2+bx+c$]{ccccccccc}
-  \Delims{\left.}{\right\}\pi_4}
-  \Infer[double]4[foo]{ddd}
-\end{prooftree}
-\end{example}
-
-\subsection{Playing with upside-down}
-
-\begin{example}
-\makeatletter
-\begin{prooftree}[template=$#1$]
-  \Hypo{1} \Hypo{2} \Infer2{3} \Hypo{4} \Infer1{5} \Infer0{6} \Infer3{7}
-  \Infer1{A} \Hypo{B} \Infer2{C} \Hypo{D} \Hypo{E} \Infer2{F}
-  \ebproof@joinh
-  \ebproofset{updown}
-  \Hypo{a} \Hypo{b} \Infer2{c}
-  \Hypo{d} \Hypo{e} \Infer2{f}
-  \Hypo{g} \Hypo{h} \Infer2{i}
-  \ebproof@joinh
-  \ebproof@joinh
-  \ebproofset{updown=false}
-  \ebproof@joinv
-\end{prooftree}
-\end{example}
 
 \end{document}
