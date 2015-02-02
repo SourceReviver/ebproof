@@ -160,7 +160,7 @@ section~\ref{sec:options}.
   including 0 (in this case there will be a line above the conclusion but no
   sub-proof).
   If \meta{label} is present, it is used as the label on the right of the
-  inference line; it is equivalent to using the \opt{rightlabel} option.
+  inference line; it is equivalent to using the \opt{right label} option.
 \end{csdoc}
 
 The \meta{text} in these statements is the contents of the conclusion at the
@@ -250,8 +250,8 @@ options, specfied using the key-value system of PGF/TikZ, provided by the
 \package{pgfkeys} package.
 All options are in the \lit{/ebproof/} path in the key tree of
 \package{pgfkeys}.
-They can be set locally for a tree or a single statement using optional
-arguments.
+They can be set locally for a proof tree or for a single statement using
+optional arguments in the associated commands.
 
 \begin{csdoc}{\cs{ebproofset}\marg{options}}
   Set some options.
@@ -263,44 +263,35 @@ arguments.
 
 \subsection{General shape}
 
-\begin{csdoc}{\opt{hsep=}\meta{dimension}}
-  The horizontal separation between sub-proofs in an inference.
-  The default value is \lit{1.5em}.
-  \begin{example}{gobble=4}
-    \begin{prooftree}[hsep=0.5em]
-      \Hypo{ A } \Hypo{ B } \Infer2{ C }
-      \Hypo{ D } \Hypo{ E } \Hypo{ F } \Infer3{ G }
-      \Hypo{ H } \Infer[hsep=3em]3{ K }
-    \end{prooftree}
-  \end{example}
+The options in this section only make sense at the global level and at the
+proof level.
+Changing the proof style inside a \lit{proof} environment has undefined
+behaviour.
+
+\begin{csdoc}{\opt{proof style=}\meta{name}}
+  Set the general shape for representing proofs.
+  The following styles are provided:
+  \begin{csdoc}{\lit{upwards}}
+    This is the default style.
+    Proof trees grow upwards, with conclusions below and premisses above.
+  \end{csdoc}
+  \begin{csdoc}{\lit{downwards}}
+    Proof trees grow downwards, with conclusions above and premisses below.
+    \begin{example}{gobble=4}
+      \begin{prooftree}[proof style=downwards]
+        \Hypo{ \Gamma, A &\vdash B }
+        \Infer1[abs]{ \Gamma &\vdash A\to B }
+        \Hypo{ \Gamma \vdash A }
+        \Infer2[app]{ \Gamma \vdash B }
+      \end{prooftree}
+    \end{example}
+  \end{csdoc}
 \end{csdoc}
 
-\begin{csdoc}{\opt{rulemargin=}\meta{dimension}}
-  The spacing above and below inference lines.
-  The default value is \lit{0.7ex}.
-  \begin{example}{gobble=4}
-    \begin{prooftree}[rulemargin=2ex]
-      \Hypo{ \Gamma, A &\vdash B }
-      \Infer1[abs]{ \Gamma &\vdash A\to B }
-      \Hypo{ \Gamma \vdash A }
-      \Infer2[app]{ \Gamma \vdash B }
-    \end{prooftree}
-  \end{example}
-\end{csdoc}
-
-\begin{csdoc}{\opt{updown=}\meta{boolean}}
-  If set to \lit{true}, the proofs are written upside down, with the
-  conclusion of rules set above and the premisses below.
-  The default value is \lit{false}.
-  \begin{example}{gobble=4}
-    \begin{prooftree}[updown]
-      \Hypo{ \Gamma, A &\vdash B }
-      \Infer1[abs]{ \Gamma &\vdash A\to B }
-      \Hypo{ \Gamma \vdash A }
-      \Infer2[app]{ \Gamma \vdash B }
-    \end{prooftree}
-  \end{example}
-\end{csdoc}
+In the optional argument of \lit{prooftree} environments, proof styles can
+be specified directly, without prefixing the name by ``\lit{proof style=}''.
+For instance, the first line of the example above could be written
+\cs{begin}\lit{\{prooftree\}[downwards]} equivalently.
 
 \begin{csdoc}{\opt{center=}\meta{boolean}}
   If set to \lit{true}, the tree produced by the \env{prooftree} environment
@@ -320,41 +311,68 @@ arguments.
   \end{example}
 \end{csdoc}
 
+\subsection{Spacing}
+
+\begin{csdoc}{\opt{separation=}\meta{dimension}}
+  The horizontal separation between sub-proofs in an inference.
+  The default value is \lit{1.5em}.
+  \begin{example}{gobble=4}
+    \begin{prooftree}[separation=0.5em]
+      \Hypo{ A } \Hypo{ B } \Infer2{ C }
+      \Hypo{ D } \Hypo{ E } \Hypo{ F } \Infer3{ G }
+      \Hypo{ H } \Infer[separation=3em]3{ K }
+    \end{prooftree}
+  \end{example}
+\end{csdoc}
+
+\begin{csdoc}{\opt{rule margin=}\meta{dimension}}
+  The spacing above and below inference lines.
+  The default value is \lit{0.7ex}.
+  \begin{example}{gobble=4}
+    \begin{prooftree}[rule margin=2ex]
+      \Hypo{ \Gamma, A &\vdash B }
+      \Infer1[abs]{ \Gamma &\vdash A\to B }
+      \Hypo{ \Gamma \vdash A }
+      \Infer2[app]{ \Gamma \vdash B }
+    \end{prooftree}
+  \end{example}
+\end{csdoc}
+
 \subsection{Shape of inference lines}
 
-The following options are predefined styles for inference rules.
-Their precise rendering is influenced by parameters specified for each style.
-Arbitrary shapes can be used using the \lit{rule code} option described
-afterwards.
-\begin{csdoc}{\opt{simple}}
-  A simple horizontal rule is drawn.
-  The thickness of the rule is defined by the \lit{thickness} option, it is
-  \lit{0.4pt} by default.
-  This is the default style.
+\begin{csdoc}{\opt{rule style=}\meta{name}}
+  Set the shape of inference lines.
+  The following values are provided:
+  \begin{csdoc}{\opt{simple}}
+    A simple horizontal rule is drawn.
+    This is the default style.
+  \end{csdoc}
+  \begin{csdoc}{\opt{no rule}}
+    No inference line is drawn.
+    A single space of the length of \lit{rule margin} is inserted.
+  \end{csdoc}
+  \begin{csdoc}{\opt{double}}
+    A double line is drawn.
+  \end{csdoc}
+  \begin{csdoc}{\opt{dashed}}
+    A single dashed line is drawn.
+  \end{csdoc}
+  The precise rendering is influenced by parameters specified below.
+  Arbitrary new shapes can defined using the \lit{rule code} option described
+  afterwards.
 \end{csdoc}
-\begin{csdoc}{\opt{none}}
-  No inference line is drawn at all.
-  A single space of the length of \lit{rulemargin} is inserted.
-\end{csdoc}
-\begin{csdoc}{\opt{double}}
-  A double line is drawn.
-  The thickness of the lines is defined by the \lit{thickness} option, the
-  spacing between lines is given by the \lit{double/sep} option.
-\end{csdoc}
-\begin{csdoc}{\opt{dashed}}
-  A single dashed line is drawn.
-  The thickness of the line is defined by the \lit{thickness} option, the
-  length of dashes is given by the \lit{dashed/on} option (\lit{0.2em} by
-  default), the spacing between dashes is given by \lit{dashed/off}
-  (\lit{0.2em} by default).
-\end{csdoc}
+
+In the optional argument of the \cs{Infer} statement, rule styles can be
+specified directly, without prefixing the style name by ``\lit{rule style=}''.
+For instance, \cs{Infer}\lit{[dashed]} is equivalent to
+\cs{Infer}\lit{[rule style=dashed]}.
 
 \begin{example}{gobble=2}
   \begin{prooftree}
     \Hypo{ \Gamma &\vdash A \to B }
-    \Infer[none]1{ \Gamma &\vdash {!A} \multimap B }
+    \Infer[no rule]1{ \Gamma &\vdash {!A} \multimap B }
     \Hypo{ \Delta &\vdash A }
-    \Infer[thickness=2pt]1{ \Delta &\vdash {!A} }
+    \Infer[rule thickness=2pt]1{ \Delta &\vdash {!A} }
     \Infer0{ B \vdash B }
     \Infer[dashed]2{ \Delta, {!A}\multimap B \vdash B }
     \Infer2{ \Gamma, \Delta &\vdash B }
@@ -362,48 +380,78 @@ afterwards.
   \end{prooftree}
 \end{example}
 
+\begin{csdoc}{\opt{rule thickness=}\meta{dimension}}
+  The thickness of inference lines.
+  It is \lit{0.4pt} by default.
+\end{csdoc}
+\begin{csdoc}{\opt{rule separation=}\meta{dimension}}
+  The distance between the two lines in the \lit{double} rule style.
+  It is \lit{2pt} by default.
+\end{csdoc}
+\begin{csdoc}{\opt{rule dash length=}\meta{dimension}}
+  The length of dashes in the \lit{dashed} rule style.
+  It is \lit{0.2em} by default.
+\end{csdoc}
+\begin{csdoc}{\opt{rule dash space=}\meta{dimension}}
+  The space between dashes in the \lit{dashed} rule style.
+  It is \lit{0.3em} by default.
+\end{csdoc}
+
 \begin{csdoc}{\opt{rule code=}\meta{code}}
   This option is used to define an arbitrary shape for rules.
   The \meta{code} is used to render the rule, it is executed in vertical mode
   in a \cs{vbox} whose \cs{hsize} is set to the width of the rule.
   Margins above and below are inserted automatically (they can be removed by
-  setting \lit{rulemargin} to \lit{0pt}).
-
-  This option is particularly useful in a ``styles'' in the sense of
-  \package{pgfkeys} (the options above are actually styles that define the
-  value of \lit{rule code} to common useful values).
+  setting \lit{rule margin} to \lit{0pt}).
 
   \begin{example}{gobble=4}
-    \ebproofset{zigzag/.style={rule code={\hbox{\tikz
-      \draw[decorate,decoration={snake,amplitude=.3ex}]
-      (0,0) -- (\hsize,0);}}}}
-    \begin{prooftree}
+    \begin{prooftree}[rule code={\hbox{\tikz
+        \draw[decorate,decoration={snake,amplitude=.3ex}]
+        (0,0) -- (\hsize,0);}}]
       \Hypo{ \Gamma &\vdash A }
       \Infer1{ \Gamma &\vdash A, \ldots, A }
       \Hypo{ \Delta, A, \ldots, A \vdash \Theta }
-      \Infer[zigzag]2{ \Gamma, \Delta \vdash \Theta }
+      \Infer2{ \Gamma, \Delta \vdash \Theta }
     \end{prooftree}
   \end{example}
   Note that this example requires the \package{tikz} package, with the
   \package{decorations.pathmorphing} library for the \lit{snake} decoration.
 \end{csdoc}
 
-\subsection{Templates}
+The option \opt{rule code} is particularly useful in a ``styles'' in the sense of
+\package{pgfkeys} as it allows to define new rule styles.
+The allowed values for \opt{rule style} are actually defined this way.
+The above example could be turned into a new rule style \lit{zigzag} with the
+following command:
+\begin{example}{gobble=2}
+  \ebproofset{
+    rule style/zigzag/.style={rule code={\hbox{\tikz
+      \draw[decorate,decoration={snake,amplitude=.3ex}]
+      (0,0) -- (\hsize,0);}}}}
+  \begin{prooftree}
+    \Hypo{ \Gamma &\vdash A }
+    \Infer1{ \Gamma &\vdash A, \ldots, A }
+    \Hypo{ \Delta, A, \ldots, A \vdash \Theta }
+    \Infer[zigzag]2{ \Gamma, \Delta \vdash \Theta }
+  \end{prooftree}
+\end{example}
+
+\subsection{Format of conclusions}
 
 \begin{csdoc}{%
     \opt{template=}\meta{macro} \\
-    \opt{lefttemplate=}\meta{macro} \\
-    \opt{righttemplate=}\meta{macro}}
+    \opt{left template=}\meta{macro} \\
+    \opt{right template=}\meta{macro}}
   Defines how conclusions are formatted.
   The macros are arbitrary \TeX\ code, composed in horizontal mode, with the
   macro argument \verb|#1| standing for the actual text passed to the
   \cs{Hypo} and \cs{Infer} statements.
   The \opt{template} value is used for conclusions with no alignment mark.
-  The \opt{lefttemplate} and \opt{righttemplate} values are used on the left
+  The \opt{left template} and \opt{right template} values are used on the left
   and right side of the alignment mark when it is present.
   The default value for \opt{template} is simply \verb|$#1$|, so that
   conclusions are set in math mode.
-  The default values for \opt{lefttemplate} and \opt{righttemplate} are
+  The default values for \opt{left template} and \opt{right template} are
   similar, with spacing assuming that a relation symbol is put near the
   alignment mark, so that \verb|\Infer1{A &\vdash B}| is spaced correctly.
 
@@ -417,25 +465,25 @@ afterwards.
   \end{example}
 \end{csdoc}
 
-\subsection{Labels}
+\subsection{Format of labels}
 
 \begin{csdoc}{%
-    \opt{leftlabel=}\meta{text} \\
-    \opt{rightlabel=}\meta{text}}
+    \opt{left label=}\meta{text} \\
+    \opt{right label=}\meta{text}}
   The text to use as the labels of the rules, on the left and on the right
   of the inference line.
   Using the second optional argument in \cs{Infer} is equivalent to setting
-  the \env{rightlabel} option with the value of that argument.
+  the \env{right label} option with the value of that argument.
 \end{csdoc}
 \begin{csdoc}{%
-    \opt{leftlabeltemplate=}\meta{macro} \\
-    \opt{rightlabeltemplate=}\meta{macro}}
+    \opt{left label template=}\meta{macro} \\
+    \opt{right label template=}\meta{macro}}
   These macros are used to typeset the text of labels on the left and right of
   inference lines.
   The default values are \verb|#1| so that labels are set in plain text mode.
 \end{csdoc}
 
-\begin{csdoc}{\opt{labelsep=}\meta{dimension}}
+\begin{csdoc}{\opt{label separation=}\meta{dimension}}
   The spacing between an inference lines and its labels.
   The default value is \lit{0.5em}.
 \end{csdoc}
