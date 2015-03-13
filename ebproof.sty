@@ -4,10 +4,8 @@
 \ProvidesPackage{ebproof}[2015/02/03 v1.0 EB's proof trees]
 
 % The |pgfkeys| package is used for the parameters in proof construction.
-% The |ifthen| package is used for some tests.
 
 \RequirePackage{pgfkeys}
-\RequirePackage{ifthen}
 
 %%% Registers and internal parameters
 
@@ -462,11 +460,16 @@ simple % use the 'simple' rule style by default
 % contains a |&| character
 
 \def\ebproof@hypo@parse#1&#2&#3\ebproof@hypo@stop{
-  \ifthenelse{\equal{#3}{}}%
-    {\ebproof@pushsimple{\ebproof@template{#1}}}%
-    {\ebproof@pushsplit
+  {\def\ARG{#3}\ifx\ARG\@empty
+      \aftergroup\iftrue\@gobble\fi
+      \else\aftergroup\iffalse\@gobble\fi\fi}%
+  % The above code has produced \iftrue or \iffalse here.
+    \ebproof@pushsimple{\ebproof@template{#1}}%
+  \else
+    \ebproof@pushsplit
       {\ebproof@lefttemplate{#1}}%
-      {\ebproof@righttemplate{#2}}}}
+      {\ebproof@righttemplate{#2}}%
+  \fi}
 
 \newcommand\ebproof@hypo[2][]{%
   {\ebproofset{#1}\ebproof@hypo@parse#2&&\ebproof@hypo@stop}}
@@ -476,12 +479,15 @@ simple % use the 'simple' rule style by default
 \def\ebproof@infer{%
   \@ifnextchar[{\ebproof@infer@}{\ebproof@infer@[]}}
 \def\ebproof@infer@[#1]#2{%
-  \@ifnextchar[{\ebproof@infer@@{#1}{#2}}{\ebproof@infer@@{#1}{#2}[]}}
-\def\ebproof@infer@@#1#2[#3]#4{{%
+  \@ifnextchar[%
+    {\ebproof@infer@with@label{#1}{#2}}%
+    {\ebproof@infer@@{#1}{#2}}}
+\def\ebproof@infer@with@label#1#2[#3]{%
+  \ebproof@infer@@{#1,right label={#3}}{#2}}
+\def\ebproof@infer@@#1#2#3{{%
   \pgfqkeys{/ebproof/rule style}{.search also=/ebproof,#1}%
   \ebproof@joinh@multi{#2}%
-  \ebproof@hypo{#4}%
-  \ifthenelse{\equal{#3}{}}{}{\ebproofset{right label={#3}}}%
+  \ebproof@hypo{#3}%
   \ebproof@joinv}}
 
 % Ellipsis with vertical dots
