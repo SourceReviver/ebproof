@@ -9,18 +9,8 @@
 
 %%% Registers and internal parameters
 
-\newbox\ebproof@leftbox
-\newbox\ebproof@rightbox
 \newif\ifebproof@updown \ebproof@updownfalse
 \newif\ifebproof@center \ebproof@centertrue
-
-\def\ebproof@template#1{$#1$}
-\def\ebproof@lefttemplate#1{$#1\mathrel{}$}
-\def\ebproof@righttemplate#1{$\mathrel{}#1$}
-\def\ebproof@leftlabeltemplate#1{#1}
-\def\ebproof@rightlabeltemplate#1{#1}
-\def\ebproof@setleftlabel{\setbox\ebproof@leftbox=\box\voidb@x}
-\def\ebproof@setrightlabel{\setbox\ebproof@rightbox=\box\voidb@x}
 
 %%% Parameters
 
@@ -50,20 +40,16 @@ rule code/.initial=,
 %
 % templates
 %
-template/.code={\def\ebproof@template##1{#1}},
-left template/.code={\def\ebproof@lefttemplate##1{#1}},
-right template/.code={\def\ebproof@righttemplate##1{#1}},
+template/.initial=$\inserttext$,
+left template/.initial=$\inserttext\mathrel{}$,
+right template/.initial=$\mathrel{}\inserttext$,
 %
 % labels
 %
-left label/.code={%
-  \def\ebproof@setleftlabel{%
-    \setbox\ebproof@leftbox=\hbox{\ebproof@leftlabeltemplate{#1}}}},
-right label/.code={%
-  \def\ebproof@setrightlabel{%
-    \setbox\ebproof@rightbox=\hbox{\ebproof@rightlabeltemplate{#1}}}},
-left label template/.code={\def\ebproof@leftlabeltemplate##1{#1}},
-right label template/.code={\def\ebproof@rightlabeltemplate##1{#1}},
+left label/.initial=,
+right label/.initial=,
+left label template/.initial=\inserttext,
+right label template/.initial=\inserttext,
 label separation/.initial=0.5em,
 }
 
@@ -286,8 +272,6 @@ simple % use the 'simple' rule style by default
 
 \def\ebproof@joinv{%
   \begingroup
-  \ebproof@setleftlabel
-  \ebproof@setrightlabel
   \ebproof@pop{A}%
   \ebproof@pop{B}%
   %
@@ -359,9 +343,16 @@ simple % use the 'simple' rule style by default
       \kern\pgfkeysvalueof{/ebproof/rule margin}%
     \fi
   }%
+  % Make the label boxes
+  \ebproof@localbox{LEFT}=\hbox{%
+    \def\inserttext{\pgfkeysvalueof{/ebproof/left label}}%
+    \pgfkeysvalueof{/ebproof/left label template}}%
+  \ebproof@localbox{RIGHT}=\hbox{%
+    \def\inserttext{\pgfkeysvalueof{/ebproof/right label}}%
+    \pgfkeysvalueof{/ebproof/right label template}}%
   % Shift things if the left box is wider than |\R@shift|
-  \ifvoid\ebproof@leftbox\else
-    \tmp=\wd\ebproof@leftbox
+  \ifvoid\LEFT\else
+    \tmp=\wd\LEFT
     \advance\tmp\pgfkeysvalueof{/ebproof/label separation}
     \ifdim\tmp>\R@shift
       \advance\tmp-\R@shift
@@ -381,14 +372,14 @@ simple % use the 'simple' rule style by default
   \advance\R@raise-\ht\RC@box
   % Make the complete rule box
   \setbox\RC@box=\hbox{%
-    \ifvoid\ebproof@leftbox\else
-      \copy\ebproof@leftbox
+    \ifvoid\LEFT\else
+      \box\LEFT
       \kern\pgfkeysvalueof{/ebproof/label separation}
     \fi
     \box\RC@box
-    \ifvoid\ebproof@rightbox\else
+    \ifvoid\RIGHT\else
       \kern\pgfkeysvalueof{/ebproof/label separation}
-      \copy\ebproof@rightbox
+      \box\RIGHT
     \fi}
   % Adapt the dimensions on the right if the total rule width is too large
   \tmp=\wd\RC@box
@@ -464,11 +455,12 @@ simple % use the 'simple' rule style by default
       \aftergroup\iftrue\@gobble\fi
       \else\aftergroup\iffalse\@gobble\fi\fi}%
   % The above code has produced \iftrue or \iffalse here.
-    \ebproof@pushsimple{\ebproof@template{#1}}%
+    \ebproof@pushsimple%
+      {\def\inserttext{#1}\pgfkeysvalueof{/ebproof/template}}%
   \else
     \ebproof@pushsplit
-      {\ebproof@lefttemplate{#1}}%
-      {\ebproof@righttemplate{#2}}%
+      {\def\inserttext{#1}\pgfkeysvalueof{/ebproof/left template}}%
+      {\def\inserttext{#2}\pgfkeysvalueof{/ebproof/right template}}%
   \fi}
 
 \newcommand\ebproof@hypo[2][]{%

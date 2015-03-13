@@ -440,24 +440,24 @@ following command:
 \subsection{Format of conclusions}
 
 \begin{csdoc}{%
-    \opt{template=}\meta{macro} \\
-    \opt{left template=}\meta{macro} \\
-    \opt{right template=}\meta{macro}}
+    \opt{template=}\meta{code} \\
+    \opt{left template=}\meta{code} \\
+    \opt{right template=}\meta{code}}
   Defines how conclusions are formatted.
-  The macros are arbitrary \TeX\ code, composed in horizontal mode, with the
-  macro argument \verb|#1| standing for the actual text passed to the
+  The code is arbitrary \TeX\ code, composed in horizontal mode.
+  The macro \cs{inserttext} can be used inside the actual text passed to the
   \cs{Hypo} and \cs{Infer} statements.
   The \opt{template} value is used for conclusions with no alignment mark.
   The \opt{left template} and \opt{right template} values are used on the left
   and right side of the alignment mark when it is present.
-  The default value for \opt{template} is simply \verb|$#1$|, so that
+  The default value for \opt{template} is simply \verb|$\inserttext$|, so that
   conclusions are set in math mode.
   The default values for \opt{left template} and \opt{right template} are
   similar, with spacing assuming that a relation symbol is put near the
   alignment mark, so that \verb|\Infer1{A &\vdash B}| is spaced correctly.
 
   \begin{example}{gobble=4}
-    \begin{prooftree}[template=(\textbf{#1})]
+    \begin{prooftree}[template=(\textbf\inserttext)]
       \Hypo{ foo }
       \Hypo{ bar }
       \Infer1{ baz }
@@ -477,11 +477,14 @@ following command:
   the \env{right label} option with the value of that argument.
 \end{csdoc}
 \begin{csdoc}{%
-    \opt{left label template=}\meta{macro} \\
-    \opt{right label template=}\meta{macro}}
-  These macros are used to typeset the text of labels on the left and right of
-  inference lines.
-  The default values are \verb|#1| so that labels are set in plain text mode.
+    \opt{left label template=}\meta{code} \\
+    \opt{right label template=}\meta{code}}
+  Defines how rule labels are formatted.
+  The code is arbitrary \TeX\ code, composed in horizontal mode.
+  The macro \cs{inserttext} can be used to insert the actual label text, as
+  defined by the options above.
+  The default values are simply \cs{inserttext} so that labels are set in
+  plain text mode.
 \end{csdoc}
 
 \begin{csdoc}{\opt{label separation=}\meta{dimension}}
