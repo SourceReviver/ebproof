@@ -14,7 +14,7 @@ ebproof.tds.zip: README ebproof.sty ebproof.pdf
 	install -d tds/tex/latex/ebproof
 	install -t tds/tex/latex/ebproof ebproof.sty
 	install -d tds/doc/latex/ebproof
-	install -t tds/doc/latex/ebproof README ebproof.pdf
+	install -t tds/doc/latex/ebproof README ebproof.pdf ebproof.tex
 	cd tds ; zip -qr ../ebproof.tds.zip *
 	rm -rf tds
 
