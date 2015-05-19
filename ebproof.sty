@@ -544,9 +544,9 @@ simple % use the 'simple' rule style by default
   \ebproof@end}
 
 \newenvironment{prooftree*}[1][]{%
-  \center
+  \[%
   \pgfqkeys{/ebproof/proof style}{.search also=/ebproof,#1}%
   \leavevmode\ebproof@begin
 }{%
   \ebproof@end
-  \endcenter}
+  \]\ignorespaces}
