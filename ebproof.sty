@@ -18,7 +18,8 @@
 % This work consists of the files ebproof.sty and ebproof.tex.
 
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{ebproof}[2015/03/13 v1.1 EB's proof trees]
+\RequirePackage{expl3}
+\ProvidesExplPackage{ebproof}{2015/05/30}{1.2pre}{EB's proof trees}
 
 % The |pgfkeys| package is used for the parameters in proof construction.
 
@@ -41,66 +42,66 @@
 %
 % general shape
 %
-center/.is if=ebproof@center,
-proof style/.is choice,
-proof style/upwards/.code={\ebproof@updownfalse},
-proof style/downwards/.code={\ebproof@updowntrue},
+center/.is~if=ebproof@center,
+proof~style/.is~choice,
+proof~style/upwards/.code={\ebproof@updownfalse},
+proof~style/downwards/.code={\ebproof@updowntrue},
 %
 % spacing
 %
 separation/.initial=1.5em,
-rule margin/.initial=.7ex,
+rule~margin/.initial=.7ex,
 %
 % shape of inference lines
 %
-rule thickness/.initial=.4pt,
-rule separation/.initial=2pt,
-rule dash length/.initial=.2em,
-rule dash space/.initial=.3em,
-rule code/.initial=,
+rule~thickness/.initial=.4pt,
+rule~separation/.initial=2pt,
+rule~dash~length/.initial=.2em,
+rule~dash~space/.initial=.3em,
+rule~code/.initial=,
 %
 % templates
 %
 template/.initial=$\inserttext$,
-left template/.initial=$\inserttext\mathrel{}$,
-right template/.initial=$\mathrel{}\inserttext$,
+left~template/.initial=$\inserttext\mathrel{}$,
+right~template/.initial=$\mathrel{}\inserttext$,
 %
 % labels
 %
-left label/.initial=,
-right label/.initial=,
-left label template/.initial=\inserttext,
-right label template/.initial=\inserttext,
-label separation/.initial=0.5em,
+left~label/.initial=,
+right~label/.initial=,
+left~label~template/.initial=\inserttext,
+right~label~template/.initial=\inserttext,
+label~separation/.initial=0.5em,
 }
 
 % Rule styles
 
-\pgfqkeys{/ebproof/rule style}{
-.is choice,
-.search also=/ebproof,
-simple/.style={/ebproof/rule code={%
-  \hrule height \pgfkeysvalueof{/ebproof/rule thickness}\relax
+\pgfqkeys{/ebproof/rule~style}{
+.is~choice,
+.search~also=/ebproof,
+simple/.style={/ebproof/rule~code={%
+  \hrule~height~\pgfkeysvalueof{/ebproof/rule~thickness}\relax
   }},
 %
-no rule/.style={/ebproof/rule code=},
+no~rule/.style={/ebproof/rule~code=},
 %
-double/.style={/ebproof/rule code={%
-  \hrule height \pgfkeysvalueof{/ebproof/rule thickness}
-  \kern\pgfkeysvalueof{/ebproof/rule separation}%
-  \hrule height \pgfkeysvalueof{/ebproof/rule thickness}
+double/.style={/ebproof/rule~code={%
+  \hrule~height~\pgfkeysvalueof{/ebproof/rule~thickness}
+  \kern\pgfkeysvalueof{/ebproof/rule~separation}%
+  \hrule~height~\pgfkeysvalueof{/ebproof/rule~thickness}
   }},
 %
-dashed/.style={/ebproof/rule code={%
-  \hbox to \hsize{%
-    \@tempdima=\pgfkeysvalueof{/ebproof/rule dash space}%
+dashed/.style={/ebproof/rule~code={%
+  \hbox~to~\hsize{%
+    \@tempdima=\pgfkeysvalueof{/ebproof/rule~dash~space}%
     \divide\@tempdima2%
     \kern-\@tempdima%
     \cleaders\hbox{%
       \kern\@tempdima%
       \vrule
-        height \pgfkeysvalueof{/ebproof/rule thickness}
-        width \pgfkeysvalueof{/ebproof/rule dash length}%
+        height~\pgfkeysvalueof{/ebproof/rule~thickness}
+        width~\pgfkeysvalueof{/ebproof/rule~dash~length}%
       \kern\@tempdima
     }\hfill
     \kern-\@tempdima
@@ -162,7 +163,7 @@ simple % use the 'simple' rule style by default
   \def\name{#2}%
   \def\check{%
     \def\ebproof@temp{0pt}%
-    \PackageError{ebproof}{unknown mark `#2'}{}}%
+    \PackageError{ebproof}{unknown~mark~`#2'}{}}%
   \def\do##1##2{%
     \def\key{##1}%
     \ifx\key\name
@@ -374,6 +375,7 @@ simple % use the 'simple' rule style by default
   \fi
   \endgroup}
 \def\ebproof@joinh@loop{%
+  \relax
   \ifnum\c>1
     \ebproof@joinh
     \advance\c-1
@@ -415,12 +417,12 @@ simple % use the 'simple' rule style by default
   \setbox\ebproof@C=\vbox{%
     \pgfmathsetlength\hsize{ebproofmark("\ebproof@C","right")}%
     \hrule width \hsize height 0pt\relax
-    \kern\pgfkeysvalueof{/ebproof/rule margin}%
-    \pgfkeysgetvalue{/ebproof/rule code}{\@rulecode}%
+    \kern\pgfkeysvalueof{/ebproof/rule~margin}%
+    \pgfkeysgetvalue{/ebproof/rule~code}{\@rulecode}%
     \ifx\@rulecode\@empty\else
       \@rulecode
       \unskip% so that only one margin is inserted if no rule is drawn
-      \kern\pgfkeysvalueof{/ebproof/rule margin}%
+      \kern\pgfkeysvalueof{/ebproof/rule~margin}%
     \fi
     \hrule width \hsize height 0pt%
   }%
@@ -436,22 +438,22 @@ simple % use the 'simple' rule style by default
   % Render the labels and append them.
   %
   \setbox\@tempboxa=\hbox{%
-    \def\inserttext{\pgfkeysvalueof{/ebproof/left label}}%
-    \pgfkeysvalueof{/ebproof/left label template}}%
+    \def\inserttext{\pgfkeysvalueof{/ebproof/left~label}}%
+    \pgfkeysvalueof{/ebproof/left~label~template}}%
   \ifdim\wd\@tempboxa>0pt%
     \ebproof@cleartree\ebproof@D
     \setbox\ebproof@D=\hbox{\smash{%
       \lower\@tempdima\box\@tempboxa
-      \kern\pgfkeysvalueof{/ebproof/label separation}}}%
+      \kern\pgfkeysvalueof{/ebproof/label~separation}}}%
     \ebproof@appendleft\ebproof@C\ebproof@D
   \fi
   \setbox\@tempboxa=\hbox{\smash{%
-    \def\inserttext{\pgfkeysvalueof{/ebproof/right label}}%
-    \pgfkeysvalueof{/ebproof/right label template}}}%
+    \def\inserttext{\pgfkeysvalueof{/ebproof/right~label}}%
+    \pgfkeysvalueof{/ebproof/right~label~template}}}%
   \ifdim\wd\@tempboxa>0pt%
     \ebproof@cleartree\ebproof@D
     \setbox\ebproof@D=\hbox{%
-      \kern\pgfkeysvalueof{/ebproof/label separation}%
+      \kern\pgfkeysvalueof{/ebproof/label~separation}%
       \lower\@tempdima\box\@tempboxa}%
     \ebproof@appendright\ebproof@C\ebproof@D
   \fi
@@ -511,8 +513,8 @@ simple % use the 'simple' rule style by default
       {\def\inserttext{#1}\pgfkeysvalueof{/ebproof/template}}%
   \else
     \ebproof@setsplit\ebproof@A
-      {\def\inserttext{#1}\pgfkeysvalueof{/ebproof/left template}}%
-      {\def\inserttext{#2}\pgfkeysvalueof{/ebproof/right template}}%
+      {\def\inserttext{#1}\pgfkeysvalueof{/ebproof/left~template}}%
+      {\def\inserttext{#2}\pgfkeysvalueof{/ebproof/right~template}}%
   \fi
   \ebproof@push\ebproof@A
 }
@@ -529,9 +531,9 @@ simple % use the 'simple' rule style by default
     {\ebproof@infer@with@label{#1}{#2}}%
     {\ebproof@infer@@{#1}{#2}}}
 \def\ebproof@infer@with@label#1#2[#3]{%
-  \ebproof@infer@@{#1,right label={#3}}{#2}}
+  \ebproof@infer@@{#1,right~label={#3}}{#2}}
 \def\ebproof@infer@@#1#2#3{{%
-  \pgfqkeys{/ebproof/rule style}{.search also=/ebproof,#1}%
+  \pgfqkeys{/ebproof/rule~style}{.search~also=/ebproof,#1}%
   \ebproof@joinh@multi{#2}%
   \ebproof@hypo{#3}%
   \ebproof@joinv}}
@@ -539,11 +541,11 @@ simple % use the 'simple' rule style by default
 % Ellipsis with vertical dots
 
 \def\ebproof@ellipsis#1#2{{%
-  \ebproofset{rule code=}%
+  \ebproofset{rule~code=}%
   \ebproof@setsplit\ebproof@A{}{%
     \setbox0=\vbox{\kern1.2ex\hbox{\ignorespaces#1}\hrule height 0pt\kern1.2ex}%
     \vbox to\ht0{\xleaders\vbox to .8ex{\vss\hbox{.}\vss}\vfill}%
-    \rlap{ \box0}}%
+    \rlap{~\box0}}%
   \ebproof@push\ebproof@A
   \ebproof@joinv
   \ebproof@hypo{#2}%
@@ -576,14 +578,14 @@ simple % use the 'simple' rule style by default
   \global\setbox\ebproof@box@temp=\box1}
 
 \newenvironment{prooftree}[1][]{%
-  \pgfqkeys{/ebproof/proof style}{.search also=/ebproof,#1}%
+  \pgfqkeys{/ebproof/proof~style}{.search~also=/ebproof,#1}%
   \leavevmode\ebproof@begin
 }{%
   \ebproof@end}
 
 \newenvironment{prooftree*}[1][]{%
   \[%
-  \pgfqkeys{/ebproof/proof style}{.search also=/ebproof,#1}%
+  \pgfqkeys{/ebproof/proof~style}{.search~also=/ebproof,#1}%
   \leavevmode\ebproof@begin
 }{%
   \ebproof@end
