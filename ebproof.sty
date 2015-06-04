@@ -122,28 +122,20 @@ simple % use the 'simple' rule style by default
 %
 % TeX does not actually provide data structures, so we have to encode things.
 % First we provide local allocators, for temporary allocation of registers in
-% a group. Dimensions are initialized to 0pt.
+% a group. Dimensions are initialized to 0pt, boxes are uninitialized.
 
 \def\ebproof@localdimen#1{%
   \advance\count11\@ne% \count11 is the number of the last allocated \dimen
   \expandafter\dimendef\csname#1\endcsname=\count11%
   \csname#1\endcsname=0pt\relax}
 
-% For boxes, the allocator must be used as
-%
-%   \ebproof@localbox{NAME}=\hbox{...}
-%
-% in order to set the value of the box.
-
 \def\ebproof@localbox#1{%
   \advance\count14\@ne% \count14 is the number of the last allocated \box
-  \expandafter\chardef\csname#1\endcsname\count14%
-  \setbox\csname#1\endcsname}
+  \expandafter\chardef\csname#1\endcsname\count14}
 
 % From this we deduce an allocator for data structures. This allocator
 % receives a base name |A| and defines the registers |\A@box|, |\A@left|,
-% |\A@right| and |\A@axis|. The macro is used like |\ebproof@localbox|, by
-% providing a value for the box.
+% |\A@right| and |\A@axis|.
 
 \def\ebproof@alloc#1{%
   \ebproof@localdimen{#1@left}%
@@ -192,7 +184,8 @@ simple % use the 'simple' rule style by default
     \global\setbox\ebproof@box@stack=\hbox{%
       \unhbox\ebproof@box@stack
       \global\setbox\ebproof@box@temp=\lastbox}%
-    \ebproof@alloc{#1}=\box\ebproof@box@temp%
+    \ebproof@alloc{#1}%
+    \expandafter\setbox\csname#1@box\endcsname=\box\ebproof@box@temp%
     \begingroup\def\pop##1##2##3##4{\endgroup%
       \csname#1@left\endcsname=##1\relax
       \csname#1@right\endcsname=##2\relax
@@ -202,7 +195,8 @@ simple % use the 'simple' rule style by default
   \else
     \PackageError{ebproof}{%
       Missing premiss in a proof tree}{}%
-    \ebproof@alloc{#1}=\box\voidb@x%
+    \ebproof@alloc{#1}%
+    \expandafter\setbox\csname#1@box\endcsname=\box\voidb@x
   \fi}
 
 
@@ -212,7 +206,8 @@ simple % use the 'simple' rule style by default
 
 \def\ebproof@pushsimple#1{%
   \begingroup
-  \ebproof@alloc{A}=\hbox{#1}%
+  \ebproof@alloc{A}%
+  \setbox\A@box=\hbox{#1}%
   \A@axis=.5\wd\A@box
   \ebproof@push{A}%
   \endgroup}
@@ -221,7 +216,8 @@ simple % use the 'simple' rule style by default
 
 \def\ebproof@pushsplit#1#2{%
   \begingroup
-  \ebproof@alloc{A}=\hbox{#1}%
+  \ebproof@alloc{A}%
+  \setbox\A@box=\hbox{#1}%
   \A@axis=\wd\A@box
   \setbox\A@box=\hbox{\unhbox\A@box#2}%
   \ebproof@push{A}%
@@ -233,7 +229,8 @@ simple % use the 'simple' rule style by default
   \begingroup
   \ebproof@pop{A}%
   \ebproof@pop{B}%
-  \ebproof@alloc{C}=\hbox{%
+  \ebproof@alloc{C}%
+  \setbox\C@box=\hbox{%
     \box\B@box
     \kern\pgfkeysvalueof{/ebproof/separation}%
     \box\A@box}%
@@ -253,7 +250,8 @@ simple % use the 'simple' rule style by default
   \countdef\c=1
   \c=#1\relax%
   \ifnum\c=0
-    \ebproof@alloc{X}=\hbox{}%
+    \ebproof@alloc{X}%
+    \setbox\X@box=\hbox{}%
     \ebproof@push{X}%
   \else
     \ebproof@joinh@loop
@@ -273,7 +271,8 @@ simple % use the 'simple' rule style by default
   \begingroup
   \ebproof@pop{A}%
   \ebproof@pop{B}%
-  \ebproof@alloc{C}=\hbox{%
+  \ebproof@alloc{C}%
+  \setbox\C@box=\hbox{%
     \box\B@box
     \kern\pgfkeysvalueof{/ebproof/separation}%
     \copy\A@box}%
@@ -292,7 +291,8 @@ simple % use the 'simple' rule style by default
   \ebproof@pop{A}%
   \ebproof@pop{B}%
   %
-  \ebproof@alloc{C}=\box\voidb@x%
+  \ebproof@alloc{C}%
+  \setbox\C@box=\box\voidb@x%
   \ebproof@localdimen{A@shift}%
   \ebproof@localdimen{B@shift}%
   \ebproof@localdimen{R@shift}%
@@ -349,7 +349,8 @@ simple % use the 'simple' rule style by default
   \fi
   \advance\R@width-\R@shift
   % Make the rule box
-  \ebproof@localbox{R@box}=\vbox{%
+  \ebproof@localbox{R@box}%
+  \setbox\R@box=\vbox{%
     \hsize=\R@width
     \hrule width \R@width height 0pt\relax
     \kern\pgfkeysvalueof{/ebproof/rule margin}%
@@ -361,10 +362,12 @@ simple % use the 'simple' rule style by default
     \fi
   }%
   % Make the label boxes
-  \ebproof@localbox{LEFT}=\hbox{%
+  \ebproof@localbox{LEFT}%
+  \setbox\LEFT=\hbox{%
     \def\inserttext{\pgfkeysvalueof{/ebproof/left label}}%
     \pgfkeysvalueof{/ebproof/left label template}}%
-  \ebproof@localbox{RIGHT}=\hbox{%
+  \ebproof@localbox{RIGHT}%
+  \setbox\RIGHT=\hbox{%
     \def\inserttext{\pgfkeysvalueof{/ebproof/right label}}%
     \pgfkeysvalueof{/ebproof/right label template}}%
   % Shift things if the left box is wider than |\R@shift|
@@ -384,7 +387,8 @@ simple % use the 'simple' rule style by default
     \fi
   \fi
   % Compute how the rule box must be shifted so that labels are aligned
-  \ebproof@localbox{RC@box}=\hbox{$\vcenter{\copy\R@box}$}%
+  \ebproof@localbox{RC@box}%
+  \setbox\RC@box=\hbox{$\vcenter{\copy\R@box}$}%
   \R@raise=\ht\R@box
   \advance\R@raise-\ht\RC@box
   % Make the complete rule box
@@ -445,17 +449,17 @@ simple % use the 'simple' rule style by default
 \def\ebproof@delims#1#2{%
   \begingroup
   \ebproof@pop{TREE}%
-  \ebproof@localbox{@SHIFTED}=%
-    \hbox{$\vcenter{\copy\TREE@box}$}%
-  \ebproof@localbox{@LEFT}=%
-    \hbox{$#1\vrule height \ht\@SHIFTED depth \dp\@SHIFTED width 0pt\right.$}%
-  \ebproof@localbox{@RIGHT}=%
-    \hbox{$\left.\vrule height \ht\@SHIFTED depth \dp\@SHIFTED width 0pt#2$}%
+  \ebproof@localbox{@SHIFTED}%
+  \setbox\@SHIFTED=\hbox{$\vcenter{\copy\TREE@box}$}%
+  \ebproof@localbox{@LEFT}%
+  \setbox\@LEFT=\hbox{$#1\vrule height \ht\@SHIFTED depth \dp\@SHIFTED width 0pt\right.$}%
+  \ebproof@localbox{@RIGHT}%
+  \setbox\@RIGHT=\hbox{$\left.\vrule height \ht\@SHIFTED depth \dp\@SHIFTED width 0pt#2$}%
   \ebproof@localdimen{dy}
   \dy=\dp\@SHIFTED
   \advance\dy-\dp\TREE@box
-  \ebproof@alloc{A}=%
-    \hbox{\raise\dy\hbox{\copy\@LEFT\box\@SHIFTED\copy\@RIGHT}}%
+  \ebproof@alloc{A}%
+  \setbox\A@box=\hbox{\raise\dy\hbox{\copy\@LEFT\box\@SHIFTED\copy\@RIGHT}}%
   \A@left=\wd\@LEFT \advance\A@left\TREE@left
   \A@right=\wd\@RIGHT \advance\A@right\TREE@right
   \A@axis=\wd\@LEFT \advance\A@axis\TREE@axis
