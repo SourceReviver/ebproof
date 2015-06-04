@@ -115,7 +115,7 @@ simple % use the 'simple' rule style by default
 %           the conclusion
 % - left :  the distance from the left of the box to the left of the
 %           conclusion
-% - right : the distance from the right of the box to the right of the
+% - right : the distance from the left of the box to the right of the
 %           conclusion
 % - axis :  the distance from the left of the box to the vertical axis
 %           of the conclusion
@@ -225,6 +225,7 @@ simple % use the 'simple' rule style by default
   \ebproof@cleartree#1%
   \setbox#1=\hbox{#2}%
   \ebproof@axis#1=.5\wd#1%
+  \ebproof@right#1=\wd#1%
 }
 
 % Push a box made of two halves, with the axis between the halves.
@@ -234,6 +235,7 @@ simple % use the 'simple' rule style by default
   \setbox#1=\hbox{#2}%
   \ebproof@axis#1=\wd#1%
   \setbox#1=\hbox{\unhbox#1#3}%
+  \ebproof@right#1=\wd#1%
 }
 
 % Join horizontally the two elements at the top of the stack.
@@ -243,15 +245,16 @@ simple % use the 'simple' rule style by default
   \ebproof@pop\ebproof@A%
   \ebproof@pop\ebproof@B%
   \ebproof@cleartree\ebproof@C%
+  \ebproof@left\ebproof@C=\ebproof@left\ebproof@B
   \setbox\ebproof@C=\hbox{%
     \box\ebproof@B
-    \kern\pgfkeysvalueof{/ebproof/separation}%
-    \box\ebproof@A}%
-  \ebproof@left\ebproof@C=\ebproof@left\ebproof@B
+    \kern\pgfkeysvalueof{/ebproof/separation}}%
   \ebproof@right\ebproof@C=\ebproof@right\ebproof@A
-  \ebproof@axis\ebproof@C=\wd\ebproof@C
-  \advance\ebproof@axis\ebproof@C\ebproof@left\ebproof@B
-  \advance\ebproof@axis\ebproof@C-\ebproof@right\ebproof@A
+  \advance\ebproof@right\ebproof@C\wd\ebproof@C
+  \setbox\ebproof@C=\hbox{\unhbox\ebproof@C
+    \box\ebproof@A}%
+  \ebproof@axis\ebproof@C=\ebproof@left\ebproof@C
+  \advance\ebproof@axis\ebproof@C\ebproof@right\ebproof@C
   \divide\ebproof@axis\ebproof@C2\relax
   \ebproof@push\ebproof@C%
   \endgroup}
@@ -284,16 +287,11 @@ simple % use the 'simple' rule style by default
   \begingroup
   \ebproof@pop\ebproof@A%
   \ebproof@pop\ebproof@B%
-  \ebproof@cleartree\ebproof@C%
-  \setbox\ebproof@C=\hbox{%
+  \setbox\ebproof@B=\hbox{%
     \box\ebproof@B
     \kern\pgfkeysvalueof{/ebproof/separation}%
     \copy\ebproof@A}%
-  \ebproof@left\ebproof@C=\ebproof@left\ebproof@B
-  \ebproof@right\ebproof@C=\ebproof@right\ebproof@B
-  \advance\ebproof@right\ebproof@C\wd\ebproof@A
-  \advance\ebproof@right\ebproof@C\pgfkeysvalueof{/ebproof/separation}%
-  \ebproof@push\ebproof@C%
+  \ebproof@push\ebproof@B%
   \endgroup}
 
 % Join vertically the two elements at the top of the stack, with a horizontal
@@ -328,6 +326,7 @@ simple % use the 'simple' rule style by default
   \ebproof@left\ebproof@C=\ebproof@left\ebproof@A
   \advance\ebproof@left\ebproof@C\A@shift
   \ebproof@right\ebproof@C=\ebproof@right\ebproof@A
+  \advance\ebproof@right\ebproof@C\A@shift
   \tmp=\wd\ebproof@B
   \advance\tmp\B@shift
   \advance\tmp-\wd\ebproof@A
@@ -335,7 +334,6 @@ simple % use the 'simple' rule style by default
   \ifdim\tmp>0pt%
     \C@width=\wd\ebproof@B
     \advance\C@width\B@shift
-    \advance\ebproof@right\ebproof@C\tmp
   \else
     \C@width=\wd\ebproof@A
     \advance\C@width\A@shift
@@ -349,12 +347,10 @@ simple % use the 'simple' rule style by default
     \R@shift=\tmp
   \fi
   % The width of the rule
-  \R@width=\wd\ebproof@A
+  \R@width=\ebproof@right\ebproof@A
   \advance\R@width\A@shift
-  \advance\R@width-\ebproof@right\ebproof@A
-  \tmp=\wd\ebproof@B
+  \tmp=\ebproof@right\ebproof@B
   \advance\tmp\B@shift
-  \advance\tmp-\ebproof@right\ebproof@B
   \ifdim\tmp>\R@width
     \R@width=\tmp
   \fi
@@ -413,13 +409,6 @@ simple % use the 'simple' rule style by default
       \kern\pgfkeysvalueof{/ebproof/label separation}
       \box\RIGHT
     \fi}
-  % Adapt the dimensions on the right if the total rule width is too large
-  \tmp=\wd\RC@box
-  \advance\tmp\R@shift
-  \ifdim\tmp>\C@width
-    \advance\tmp-\C@width
-    \advance\ebproof@right\ebproof@C\tmp
-  \fi
   % Cancel the labels' height and depth
   \setbox\RC@box=\hbox{\raise\R@raise\box\RC@box}
   \ht\RC@box=\ht\R@box
@@ -469,12 +458,11 @@ simple % use the 'simple' rule style by default
   \ebproof@localdimen{dy}
   \dy=\dp\@SHIFTED
   \advance\dy-\dp\ebproof@A
-  \ebproof@cleartree\ebproof@B%
-  \setbox\ebproof@B=\hbox{\raise\dy\hbox{\copy\@LEFT\box\@SHIFTED\copy\@RIGHT}}%
-  \ebproof@left\ebproof@B=\wd\@LEFT \advance\ebproof@left\ebproof@B\ebproof@left\ebproof@A
-  \ebproof@right\ebproof@B=\wd\@RIGHT \advance\ebproof@right\ebproof@B\ebproof@right\ebproof@A
-  \ebproof@axis\ebproof@B=\wd\@LEFT \advance\ebproof@axis\ebproof@B\ebproof@axis\ebproof@A
-  \ebproof@push\ebproof@B%
+  \setbox\ebproof@A=\hbox{\raise\dy\hbox{\copy\@LEFT\box\@SHIFTED\copy\@RIGHT}}%
+  \advance\ebproof@left\ebproof@A\wd\@LEFT
+  \advance\ebproof@right\ebproof@A\wd\@LEFT
+  \advance\ebproof@axis\ebproof@A\wd\@LEFT
+  \ebproof@push\ebproof@A%
   \endgroup}
 
 %%% High-level commands
