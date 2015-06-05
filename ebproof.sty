@@ -140,6 +140,7 @@ simple % use the 'simple' rule style by default
 \ebproof@newtree\ebproof@A
 \ebproof@newtree\ebproof@B
 \ebproof@newtree\ebproof@C
+\ebproof@newtree\ebproof@D
 
 % Clear a tree register.
 
@@ -149,18 +150,6 @@ simple % use the 'simple' rule style by default
   \ebproof@right#1=0pt%
   \ebproof@axis#1=0pt%
 \relax}
-
-% First we provide local allocators, for temporary allocation of registers in
-% a group. Dimensions are initialized to 0pt, boxes are uninitialized.
-
-\def\ebproof@localdimen#1{%
-  \advance\count11\@ne% \count11 is the number of the last allocated \dimen
-  \expandafter\dimendef\csname#1\endcsname=\count11%
-  \csname#1\endcsname=0pt\relax}
-
-\def\ebproof@localbox#1{%
-  \advance\count14\@ne% \count14 is the number of the last allocated \box
-  \expandafter\chardef\csname#1\endcsname\count14}
 
 % Logically, such structures are stored on a stack. However, TeX does not
 % provide data structures, so we encode them using what we actually have. A
@@ -238,25 +227,102 @@ simple % use the 'simple' rule style by default
   \ebproof@right#1=\wd#1%
 }
 
-% Join horizontally the two elements at the top of the stack.
+% Extend a box on the right by a given length.
+
+\def\ebproof@extendright#1#2{%
+  \setbox#1\hbox{%
+    \ifhbox#1\unhbox#1\else\box#1\fi
+    \kern#2}}
+
+% Shift the contents of a box by a given length to the right.
+
+\def\ebproof@shiftright#1#2{%
+  \advance\ebproof@left#1#2%
+  \advance\ebproof@right#1#2%
+  \advance\ebproof@axis#1#2%
+  \setbox#1\hbox{%
+    \kern\@tempdima
+    \ifhbox#1\unhbox#1\else\box#1\fi}}
+
+% Append the contents of the second tree to the first one on the right, with
+% matching baselines. The marks of the first tree are preserved.
+
+\def\ebproof@appendright#1#2{%
+  \setbox#1\hbox{%
+    \ifhbox#1\unhbox#1\else\box#1\fi
+    \ifhbox#2\unhcopy#2\else\copy#2\fi}}
+
+% Append the contents of the second tree to the first one on the left, with
+% matching baselines. The marks of the first tree are shifted accordingly.
+
+\def\ebproof@appendleft#1#2{%
+  \advance\ebproof@left#1\wd#2%
+  \advance\ebproof@right#1\wd#2%
+  \advance\ebproof@axis#1\wd#2%
+  \setbox#1\hbox{%
+    \ifhbox#2\unhcopy#2\else\copy#2\fi
+    \ifhbox#1\unhbox#1\else\box#1\fi}}
+
+% Append the contents of the second tree above the first one, with matching
+% axes. The marks of the first tree are preserved.
+
+\def\ebproof@appendabove#1#2{%
+  \@tempdima=\ebproof@axis#1%
+  \advance\@tempdima-\ebproof@axis#2%
+  \ifdim\@tempdima>0pt%
+    \setbox#1\vbox{%
+      \moveright\@tempdima\copy#2%
+      \hrule height 0pt%
+      \ifvbox#1\unvbox#1\else\box#1\fi}%
+  \else
+    \setbox#1\vbox{%
+      \ifvbox#2\unvcopy#2\else\copy#2\fi
+      \hrule height 0pt%
+      \moveright-\@tempdima\box#1}%
+    \advance\ebproof@left#1-\@tempdima
+    \advance\ebproof@right#1-\@tempdima
+    \advance\ebproof@axis#1-\@tempdima
+  \fi
+}
+
+% Append the contents of the second tree below the first one, with matching
+% axes. The marks of the first tree are preserved.
+
+\def\ebproof@appendbelow#1#2{%
+  \@tempdima=\ebproof@axis#1%
+  \advance\@tempdima-\ebproof@axis#2%
+  \ifdim\@tempdima>0pt%
+    \setbox#1\vtop{%
+      \ifvbox#1\unvbox#1\else\box#1\fi
+      \hrule height 0pt%
+      \moveright\@tempdima\copy#2}%
+  \else
+    \setbox#1\vtop{%
+      \moveright-\@tempdima\box#1%
+      \hrule height 0pt%
+      \ifvbox#2\unvcopy#2\else\copy#2\fi}%
+    \advance\ebproof@left#1-\@tempdima
+    \advance\ebproof@right#1-\@tempdima
+    \advance\ebproof@axis#1-\@tempdima
+  \fi
+}
+
+% Join horizontally the two elements at the top of the stack. Use the left
+% mark of the left tree, the right mark of the right tree and set the axis in
+% the middle of these marks.
 
 \def\ebproof@joinh{%
   \begingroup
   \ebproof@pop\ebproof@A%
   \ebproof@pop\ebproof@B%
-  \ebproof@cleartree\ebproof@C%
-  \ebproof@left\ebproof@C=\ebproof@left\ebproof@B
-  \setbox\ebproof@C=\hbox{%
-    \box\ebproof@B
-    \kern\pgfkeysvalueof{/ebproof/separation}}%
-  \ebproof@right\ebproof@C=\ebproof@right\ebproof@A
-  \advance\ebproof@right\ebproof@C\wd\ebproof@C
-  \setbox\ebproof@C=\hbox{\unhbox\ebproof@C
-    \box\ebproof@A}%
-  \ebproof@axis\ebproof@C=\ebproof@left\ebproof@C
-  \advance\ebproof@axis\ebproof@C\ebproof@right\ebproof@C
-  \divide\ebproof@axis\ebproof@C2\relax
-  \ebproof@push\ebproof@C%
+  \ebproof@extendright\ebproof@B{\pgfkeysvalueof{/ebproof/separation}}%
+  \advance\ebproof@right\ebproof@A\wd\ebproof@B
+  \ebproof@appendright\ebproof@B\ebproof@A
+  \ebproof@right\ebproof@B\ebproof@right\ebproof@A
+  \ebproof@axis\ebproof@B\ebproof@left\ebproof@B
+  \advance\ebproof@axis\ebproof@B\ebproof@right\ebproof@B
+  \divide\ebproof@axis\ebproof@B2%
+  \ebproof@push\ebproof@B%
   \endgroup}
 
 % An $n$-ary version of the horizontal join.
@@ -287,10 +353,8 @@ simple % use the 'simple' rule style by default
   \begingroup
   \ebproof@pop\ebproof@A%
   \ebproof@pop\ebproof@B%
-  \setbox\ebproof@B=\hbox{%
-    \box\ebproof@B
-    \kern\pgfkeysvalueof{/ebproof/separation}%
-    \copy\ebproof@A}%
+  \ebproof@extendright\ebproof@B{\pgfkeysvalueof{/ebproof/separation}}%
+  \ebproof@appendright\ebproof@B\ebproof@A
   \ebproof@push\ebproof@B%
   \endgroup}
 
@@ -298,68 +362,39 @@ simple % use the 'simple' rule style by default
 % rule of the appropriate size.
 
 \def\ebproof@joinv{%
-  \begingroup
-  \ebproof@pop\ebproof@A%
-  \ebproof@pop\ebproof@B%
-  \ebproof@cleartree\ebproof@C%
-  \ebproof@localdimen{A@shift}%
-  \ebproof@localdimen{B@shift}%
-  \ebproof@localdimen{R@shift}%
-  \ebproof@localdimen{R@raise}%
-  \ebproof@localdimen{R@width}%
-  \ebproof@localdimen{C@width}%
-  \ebproof@localdimen{tmp}%
+  \ebproof@pop\ebproof@A
+  \ebproof@pop\ebproof@B
+  \ebproof@cleartree\ebproof@C
   %
-  % The placement of the boxes and the axis of the result
-  \ifdim\ebproof@axis\ebproof@A>\ebproof@axis\ebproof@B
-    \A@shift=0pt%
-    \B@shift=\ebproof@axis\ebproof@A
-    \advance\B@shift-\ebproof@axis\ebproof@B
-    \ebproof@axis\ebproof@C=\ebproof@axis\ebproof@A
+  % Compute the width and axis of the rule in C's parameters
+  %
+  \@tempdima=\ebproof@right\ebproof@A
+  \advance\@tempdima-\ebproof@axis\ebproof@A
+  \@tempdimb=\ebproof@right\ebproof@B
+  \advance\@tempdimb-\ebproof@axis\ebproof@B
+  \ifdim\@tempdima>\@tempdimb
+    \ebproof@right\ebproof@C=\@tempdima
   \else
-    \A@shift=\ebproof@axis\ebproof@B
-    \advance\A@shift-\ebproof@axis\ebproof@A
-    \B@shift=0pt%
-    \ebproof@axis\ebproof@C=\ebproof@axis\ebproof@B
+    \ebproof@right\ebproof@C=\@tempdimb
   \fi
-  % The paddings of the result
-  \ebproof@left\ebproof@C=\ebproof@left\ebproof@A
-  \advance\ebproof@left\ebproof@C\A@shift
-  \ebproof@right\ebproof@C=\ebproof@right\ebproof@A
-  \advance\ebproof@right\ebproof@C\A@shift
-  \tmp=\wd\ebproof@B
-  \advance\tmp\B@shift
-  \advance\tmp-\wd\ebproof@A
-  \advance\tmp-\A@shift
-  \ifdim\tmp>0pt%
-    \C@width=\wd\ebproof@B
-    \advance\C@width\B@shift
+  %
+  \@tempdima=\ebproof@axis\ebproof@A
+  \advance\@tempdima-\ebproof@left\ebproof@A
+  \@tempdimb=\ebproof@axis\ebproof@B
+  \advance\@tempdimb-\ebproof@left\ebproof@B
+  \ifdim\@tempdima>\@tempdimb
+    \ebproof@axis\ebproof@C=\@tempdima
+    \advance\ebproof@right\ebproof@C\@tempdima
   \else
-    \C@width=\wd\ebproof@A
-    \advance\C@width\A@shift
+    \ebproof@axis\ebproof@C=\@tempdimb
+    \advance\ebproof@right\ebproof@C\@tempdimb
   \fi
-  % The position of the rule
-  \R@shift=\ebproof@left\ebproof@A
-  \advance\R@shift\A@shift
-  \tmp=\ebproof@left\ebproof@B
-  \advance\tmp\B@shift
-  \ifdim\R@shift>\tmp
-    \R@shift=\tmp
-  \fi
-  % The width of the rule
-  \R@width=\ebproof@right\ebproof@A
-  \advance\R@width\A@shift
-  \tmp=\ebproof@right\ebproof@B
-  \advance\tmp\B@shift
-  \ifdim\tmp>\R@width
-    \R@width=\tmp
-  \fi
-  \advance\R@width-\R@shift
-  % Make the rule box
-  \ebproof@localbox{R@box}%
-  \setbox\R@box=\vbox{%
-    \hsize=\R@width
-    \hrule width \R@width height 0pt\relax
+  %
+  % Render the rule in C's box
+  %
+  \setbox\ebproof@C=\vbox{%
+    \hsize=\ebproof@right\ebproof@C
+    \hrule width \hsize height 0pt\relax
     \kern\pgfkeysvalueof{/ebproof/rule margin}%
     \pgfkeysgetvalue{/ebproof/rule code}{\@rulecode}%
     \ifx\@rulecode\@empty\else
@@ -367,70 +402,51 @@ simple % use the 'simple' rule style by default
       \unskip% so that only one margin is inserted if no rule is drawn
       \kern\pgfkeysvalueof{/ebproof/rule margin}%
     \fi
+    \hrule width \hsize height 0pt%
   }%
-  % Make the label boxes
-  \ebproof@localbox{LEFT}%
-  \setbox\LEFT=\hbox{%
+  %
+  % Compute the vertical shift of the rule for centering using \vcenter, save
+  % the height of the rule box.
+  %
+  \setbox\@tempboxa=\hbox{$\vcenter{\copy\ebproof@C}$}%
+  \@tempdima=\ht\@tempboxa
+  \advance\@tempdima-\ht\ebproof@C
+  \@tempdimb=\ht\@tempboxa
+  %
+  % Render the labels and append them.
+  %
+  \setbox\@tempboxa=\hbox{%
     \def\inserttext{\pgfkeysvalueof{/ebproof/left label}}%
     \pgfkeysvalueof{/ebproof/left label template}}%
-  \ebproof@localbox{RIGHT}%
-  \setbox\RIGHT=\hbox{%
+  \ifdim\wd\@tempboxa>0pt%
+    \ebproof@cleartree\ebproof@D
+    \setbox\ebproof@D=\hbox{\smash{%
+      \lower\@tempdima\box\@tempboxa
+      \kern\pgfkeysvalueof{/ebproof/label separation}}}%
+    \ebproof@appendleft\ebproof@C\ebproof@D
+  \fi
+  \setbox\@tempboxa=\hbox{\smash{%
     \def\inserttext{\pgfkeysvalueof{/ebproof/right label}}%
-    \pgfkeysvalueof{/ebproof/right label template}}%
-  % Shift things if the left box is wider than |\R@shift|
-  \ifvoid\LEFT\else
-    \tmp=\wd\LEFT
-    \advance\tmp\pgfkeysvalueof{/ebproof/label separation}
-    \ifdim\tmp>\R@shift
-      \advance\tmp-\R@shift
-      \advance\A@shift\tmp
-      \advance\B@shift\tmp
-      \advance\ebproof@left\ebproof@C\tmp
-      \advance\ebproof@axis\ebproof@C\tmp
-      \advance\C@width\tmp
-      \R@shift=0pt\relax
-    \else
-      \advance\R@shift-\tmp
-    \fi
+    \pgfkeysvalueof{/ebproof/right label template}}}%
+  \ifdim\wd\@tempboxa>0pt%
+    \ebproof@cleartree\ebproof@D
+    \setbox\ebproof@D=\hbox{%
+      \kern\pgfkeysvalueof{/ebproof/label separation}%
+      \lower\@tempdima\box\@tempboxa}%
+    \ebproof@appendright\ebproof@C\ebproof@D
   \fi
-  % Compute how the rule box must be shifted so that labels are aligned
-  \ebproof@localbox{RC@box}%
-  \setbox\RC@box=\hbox{$\vcenter{\copy\R@box}$}%
-  \R@raise=\ht\R@box
-  \advance\R@raise-\ht\RC@box
-  % Make the complete rule box
-  \setbox\RC@box=\hbox{%
-    \ifvoid\LEFT\else
-      \box\LEFT
-      \kern\pgfkeysvalueof{/ebproof/label separation}
-    \fi
-    \box\RC@box
-    \ifvoid\RIGHT\else
-      \kern\pgfkeysvalueof{/ebproof/label separation}
-      \box\RIGHT
-    \fi}
-  % Cancel the labels' height and depth
-  \setbox\RC@box=\hbox{\raise\R@raise\box\RC@box}
-  \ht\RC@box=\ht\R@box
-  \dp\RC@box=\dp\R@box
-  % Make the box
+  %
+  % Assemble the three parts.
+  %
   \ifebproof@updown
-    \setbox\ebproof@C=\vtop{%
-      \moveright\A@shift\box\ebproof@A
-      \hrule height 0pt
-      \moveright\R@shift\box\RC@box%
-      \hrule height 0pt
-      \moveright\B@shift\box\ebproof@B}%
+    \ebproof@appendbelow\ebproof@A\ebproof@C
+    \ebproof@appendbelow\ebproof@A\ebproof@B
   \else
-    \setbox\ebproof@C=\vbox{%
-      \moveright\B@shift\box\ebproof@B
-      \hrule height 0pt
-      \moveright\R@shift\box\RC@box%
-      \hrule height 0pt
-      \moveright\A@shift\box\ebproof@A}%
+    \ebproof@appendabove\ebproof@A\ebproof@C
+    \ebproof@appendabove\ebproof@A\ebproof@B
   \fi
-  \ebproof@push\ebproof@C%
-  \endgroup}
+  \ebproof@push\ebproof@A
+}
 
 %%% Modifying boxes
 
@@ -449,19 +465,16 @@ simple % use the 'simple' rule style by default
 \def\ebproof@delims#1#2{%
   \begingroup
   \ebproof@pop\ebproof@A%
-  \ebproof@localbox{@SHIFTED}%
-  \setbox\@SHIFTED=\hbox{$\vcenter{\copy\ebproof@A}$}%
-  \ebproof@localbox{@LEFT}%
-  \setbox\@LEFT=\hbox{$#1\vrule height \ht\@SHIFTED depth \dp\@SHIFTED width 0pt\right.$}%
-  \ebproof@localbox{@RIGHT}%
-  \setbox\@RIGHT=\hbox{$\left.\vrule height \ht\@SHIFTED depth \dp\@SHIFTED width 0pt#2$}%
-  \ebproof@localdimen{dy}
-  \dy=\dp\@SHIFTED
-  \advance\dy-\dp\ebproof@A
-  \setbox\ebproof@A=\hbox{\raise\dy\hbox{\copy\@LEFT\box\@SHIFTED\copy\@RIGHT}}%
-  \advance\ebproof@left\ebproof@A\wd\@LEFT
-  \advance\ebproof@right\ebproof@A\wd\@LEFT
-  \advance\ebproof@axis\ebproof@A\wd\@LEFT
+  \setbox\@tempboxa=\hbox{$\vcenter{\copy\ebproof@A}$}%
+  \@tempdima=\ht\@tempboxa
+  \advance\@tempdima-\ht\ebproof@A
+  \setbox\ebproof@A=\hbox{$#1%
+    \vrule height \ht\@tempboxa depth \dp\@tempboxa width 0pt\right.$}%
+  \advance\ebproof@left\ebproof@A\wd\ebproof@A
+  \advance\ebproof@right\ebproof@A\wd\ebproof@A
+  \advance\ebproof@axis\ebproof@A\wd\ebproof@A
+  \setbox\ebproof@A=\hbox{\unhbox\ebproof@A$\left.\box\@tempboxa#2$}%
+  \setbox\ebproof@A=\hbox{\raise-\@tempdima\box\ebproof@A}%
   \ebproof@push\ebproof@A%
   \endgroup}
 
