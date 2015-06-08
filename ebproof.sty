@@ -24,6 +24,10 @@
 
 \RequirePackage{pgfkeys}
 
+% The |pgfmath| package is used for computations.
+
+\RequirePackage{pgfmath}
+
 %%% Registers and internal parameters
 
 \newif\ifebproof@updown \ebproof@updownfalse
@@ -106,58 +110,151 @@ dashed/.style={/ebproof/rule code={%
 simple % use the 'simple' rule style by default
 }
 
-%%% Storage
 
-% Proof trees are represented as a data structure that consists of the
-% following data:
-%
-% - box :   the tree itself, as a box, with the base line on that of
-%           the conclusion
-% - left :  the distance from the left of the box to the left of the
-%           conclusion
-% - right : the distance from the left of the box to the right of the
-%           conclusion
-% - axis :  the distance from the left of the box to the vertical axis
-%           of the conclusion
+%%% Annotated boxes
+
+% Proof trees are represented as a data structure that consists of a box and a
+% set of marks, which are vertical positions in the box (as distances from the
+% left edge):
+% - left :  the left of the conclusion
+% - right : the right of the conclusion
+% - axis :  the vertical axis of the conclusion
 %
 % TeX does not actually provide data structures, so we have to encode things.
 % We provide an allocator for "registers" holding boxes with attributes. Such
-% a register consists in a box register and a a dimension register for each of
-% the above dimensions. The dimensions of register \x are accessed using
-% \ebproof@left\x etc.
+% a register consists in a box register and a macro for each of the above
+% dimensions, holding its value textually (as a number without units for the
+% value in poins).
 
-\def\ebproof@left#1{\csname ebproof@left@\the#1\endcsname}
-\def\ebproof@right#1{\csname ebproof@right@\the#1\endcsname}
-\def\ebproof@axis#1{\csname ebproof@axis@\the#1\endcsname}
+% Create a new register.
 
-\def\ebproof@newtree#1{%
+\def\ebproof@new#1{%
   \newbox#1%
-  \expandafter\expandafter\expandafter\newdimen\ebproof@left#1%
-  \expandafter\expandafter\expandafter\newdimen\ebproof@right#1%
-  \expandafter\expandafter\expandafter\newdimen\ebproof@axis#1%
+  \ebproof@cleartree#1%
 }
 
-\ebproof@newtree\ebproof@A
-\ebproof@newtree\ebproof@B
-\ebproof@newtree\ebproof@C
-\ebproof@newtree\ebproof@D
+% Set the value of a mark. The third argument is a value, parsed by pgfmath.
+
+\def\ebproof@setmark#1#2#3{%
+  \expandafter\pgfmathsetmacro
+  \csname ebproof@mark@\the#1@#2\endcsname{#3}%
+}
+
+% Get the value of a mark, in a pgfmath expression.
+
+\pgfmathdeclarefunction{ebproofmark}{2}{%
+  \edef\pgfmathresult{\csname ebproof@mark@\the#1@#2\endcsname}%
+}
 
 % Clear a tree register.
 
 \def\ebproof@cleartree#1{%
   \setbox#1=\box\voidb@x
-  \ebproof@left#1=0pt%
-  \ebproof@right#1=0pt%
-  \ebproof@axis#1=0pt%
-\relax}
+  \ebproof@setmark#1{left}{0pt}%
+  \ebproof@setmark#1{right}{0pt}%
+  \ebproof@setmark#1{axis}{0pt}%
+}
 
-% Logically, such structures are stored on a stack. However, TeX does not
-% provide data structures, so we encode them using what we actually have. A
-% stack for boxes is implemented using a global hbox |\ebproof@box@stack| that
-% contains all the boxes successively, and the |\lastbox| primitive allows us
-% to pop elements from there. A macro |\ebproof@stack| is used to store the
-% dimensions textually: the empty stack is an empty macro, and a non-empty
-% stack is represented as |{left}{right}{axis}{tail}|. We maintain a counter
+% Make a box with the axis in the middle.
+
+\def\ebproof@setsimple#1#2{%
+  \setbox#1=\hbox{#2}%
+  \ebproof@setmark#1{left}{0pt}%
+  \ebproof@setmark#1{axis}{\wd#1/2}%
+  \ebproof@setmark#1{right}{\wd#1}%
+}
+
+% Push a box made of two halves, with the axis between the halves.
+
+\def\ebproof@setsplit#1#2#3{%
+  \ebproof@setmark#1{left}{0pt}%
+  \setbox#1=\hbox{#2}%
+  \ebproof@setmark#1{axis}{\wd#1}%
+  \setbox#1=\hbox{\unhbox#1#3}%
+  \ebproof@setmark#1{right}{\wd#1}%
+}
+
+% Shift the marks by a specified amount, without modifying the box.
+
+\def\ebproof@shiftx#1#2{%
+  \ebproof@setmark#1{left}{ebproofmark("#1","left")+#2}%
+  \ebproof@setmark#1{right}{ebproofmark("#1","right")+#2}%
+  \ebproof@setmark#1{axis}{ebproofmark("#1","axis")+#2}%
+}
+
+% Extend a box on the right by a given length.
+
+\def\ebproof@extendright#1#2{%
+  \setbox#1\hbox{%
+    \ifhbox#1\unhbox#1\else\box#1\fi
+    \kern#2}}
+
+% Append the contents of the second tree to the first one on the right, with
+% matching baselines. The marks of the first tree are preserved.
+
+\def\ebproof@appendright#1#2{%
+  \setbox#1\hbox{%
+    \ifhbox#1\unhbox#1\else\box#1\fi
+    \ifhbox#2\unhcopy#2\else\copy#2\fi}}
+
+% Append the contents of the second tree to the first one on the left, with
+% matching baselines. The marks of the first tree are shifted accordingly.
+
+\def\ebproof@appendleft#1#2{%
+  \ebproof@shiftx#1{\wd#2}%
+  \setbox#1\hbox{%
+    \ifhbox#2\unhcopy#2\else\copy#2\fi
+    \ifhbox#1\unhbox#1\else\box#1\fi}}
+
+% Append the contents of the second tree above the first one, with matching
+% axes. The marks of the first tree are preserved.
+
+\def\ebproof@appendabove#1#2{%
+  \pgfmathsetlength\@tempdima{ebproofmark("#2","axis")-ebproofmark("#1","axis")}%
+  \ifdim\@tempdima<0pt%
+    \setbox#1\vbox{%
+      \moveleft\@tempdima\copy#2%
+      \hrule height 0pt%
+      \ifvbox#1\unvbox#1\else\box#1\fi}%
+  \else
+    \setbox#1\vbox{%
+      \ifvbox#2\unvcopy#2\else\copy#2\fi
+      \hrule height 0pt%
+      \moveright\@tempdima\box#1}%
+    \ebproof@shiftx#1\@tempdima
+  \fi
+}
+
+% Append the contents of the second tree below the first one, with matching
+% axes. The marks of the first tree are preserved.
+
+\def\ebproof@appendbelow#1#2{%
+  \pgfmathsetlength\@tempdima{ebproofmark("#2","axis")-ebproofmark("#1","axis")}%
+  \ifdim\@tempdima<0pt%
+    \setbox#1\vtop{%
+      \ifvbox#1\unvbox#1\else\box#1\fi
+      \hrule height 0pt%
+      \moveleft\@tempdima\copy#2}%
+  \else
+    \setbox#1\vtop{%
+      \moveright\@tempdima\box#1%
+      \hrule height 0pt%
+      \ifvbox#2\unvcopy#2\else\copy#2\fi}%
+    \ebproof@shiftx#1\@tempdima
+  \fi
+}
+
+
+%%% The stack
+
+% Logically, box structures are stored on a stack. However, TeX does not
+% provide data structures for that and the grouping mechanism is not flexible
+% enough, so we encode them using what we actually have. A stack for boxes is
+% implemented using a global hbox |\ebproof@box@stack| that contains all the
+% boxes successively, and the |\lastbox| primitive allows us to pop elements
+% from there. A macro |\ebproof@stack| is used to store the dimensions
+% textually: the empty stack is an empty macro, and a non-empty stack is
+% represented as |{left}{right}{axis}{tail}|. We maintain a counter
 % |\ebproof@level| with the number of elements on the stack, for consistency
 % checks.
 
@@ -179,9 +276,9 @@ simple % use the 'simple' rule style by default
   \global\setbox\ebproof@box@stack=\hbox{%
     \unhbox\ebproof@box@stack\copy#1}%
   \xdef\ebproof@stack{%
-    {\the\ebproof@left#1}%
-    {\the\ebproof@right#1}%
-    {\the\ebproof@axis#1}%
+    {\csname ebproof@mark@\the#1@left\endcsname}%
+    {\csname ebproof@mark@\the#1@right\endcsname}%
+    {\csname ebproof@mark@\the#1@axis\endcsname}%
     {\ebproof@stack}}}
 
 % Pop the value from the top of the stack into a register.
@@ -194,9 +291,9 @@ simple % use the 'simple' rule style by default
       \global\setbox\ebproof@box@temp=\lastbox}%
     \setbox#1=\box\ebproof@box@temp
     \begingroup\def\pop##1##2##3##4{\endgroup
-      \ebproof@left#1=##1\relax
-      \ebproof@right#1=##2\relax
-      \ebproof@axis#1=##3\relax
+      \ebproof@setmark#1{left}{##1}%
+      \ebproof@setmark#1{right}{##2}%
+      \ebproof@setmark#1{axis}{##3}%
       \gdef\ebproof@stack{##4}}%
     \expandafter\pop\ebproof@stack
   \else
@@ -206,106 +303,12 @@ simple % use the 'simple' rule style by default
   \fi}
 
 
-%%% Making boxes
+%%% Stack-based operations
 
-% Make a box with the axis in the middle.
-
-\def\ebproof@setsimple#1#2{%
-  \ebproof@cleartree#1%
-  \setbox#1=\hbox{#2}%
-  \ebproof@axis#1=.5\wd#1%
-  \ebproof@right#1=\wd#1%
-}
-
-% Push a box made of two halves, with the axis between the halves.
-
-\def\ebproof@setsplit#1#2#3{%
-  \ebproof@cleartree#1%
-  \setbox#1=\hbox{#2}%
-  \ebproof@axis#1=\wd#1%
-  \setbox#1=\hbox{\unhbox#1#3}%
-  \ebproof@right#1=\wd#1%
-}
-
-% Extend a box on the right by a given length.
-
-\def\ebproof@extendright#1#2{%
-  \setbox#1\hbox{%
-    \ifhbox#1\unhbox#1\else\box#1\fi
-    \kern#2}}
-
-% Shift the contents of a box by a given length to the right.
-
-\def\ebproof@shiftright#1#2{%
-  \advance\ebproof@left#1#2%
-  \advance\ebproof@right#1#2%
-  \advance\ebproof@axis#1#2%
-  \setbox#1\hbox{%
-    \kern\@tempdima
-    \ifhbox#1\unhbox#1\else\box#1\fi}}
-
-% Append the contents of the second tree to the first one on the right, with
-% matching baselines. The marks of the first tree are preserved.
-
-\def\ebproof@appendright#1#2{%
-  \setbox#1\hbox{%
-    \ifhbox#1\unhbox#1\else\box#1\fi
-    \ifhbox#2\unhcopy#2\else\copy#2\fi}}
-
-% Append the contents of the second tree to the first one on the left, with
-% matching baselines. The marks of the first tree are shifted accordingly.
-
-\def\ebproof@appendleft#1#2{%
-  \advance\ebproof@left#1\wd#2%
-  \advance\ebproof@right#1\wd#2%
-  \advance\ebproof@axis#1\wd#2%
-  \setbox#1\hbox{%
-    \ifhbox#2\unhcopy#2\else\copy#2\fi
-    \ifhbox#1\unhbox#1\else\box#1\fi}}
-
-% Append the contents of the second tree above the first one, with matching
-% axes. The marks of the first tree are preserved.
-
-\def\ebproof@appendabove#1#2{%
-  \@tempdima=\ebproof@axis#1%
-  \advance\@tempdima-\ebproof@axis#2%
-  \ifdim\@tempdima>0pt%
-    \setbox#1\vbox{%
-      \moveright\@tempdima\copy#2%
-      \hrule height 0pt%
-      \ifvbox#1\unvbox#1\else\box#1\fi}%
-  \else
-    \setbox#1\vbox{%
-      \ifvbox#2\unvcopy#2\else\copy#2\fi
-      \hrule height 0pt%
-      \moveright-\@tempdima\box#1}%
-    \advance\ebproof@left#1-\@tempdima
-    \advance\ebproof@right#1-\@tempdima
-    \advance\ebproof@axis#1-\@tempdima
-  \fi
-}
-
-% Append the contents of the second tree below the first one, with matching
-% axes. The marks of the first tree are preserved.
-
-\def\ebproof@appendbelow#1#2{%
-  \@tempdima=\ebproof@axis#1%
-  \advance\@tempdima-\ebproof@axis#2%
-  \ifdim\@tempdima>0pt%
-    \setbox#1\vtop{%
-      \ifvbox#1\unvbox#1\else\box#1\fi
-      \hrule height 0pt%
-      \moveright\@tempdima\copy#2}%
-  \else
-    \setbox#1\vtop{%
-      \moveright-\@tempdima\box#1%
-      \hrule height 0pt%
-      \ifvbox#2\unvcopy#2\else\copy#2\fi}%
-    \advance\ebproof@left#1-\@tempdima
-    \advance\ebproof@right#1-\@tempdima
-    \advance\ebproof@axis#1-\@tempdima
-  \fi
-}
+\ebproof@new\ebproof@A
+\ebproof@new\ebproof@B
+\ebproof@new\ebproof@C
+\ebproof@new\ebproof@D
 
 % Join horizontally the two elements at the top of the stack. Use the left
 % mark of the left tree, the right mark of the right tree and set the axis in
@@ -316,12 +319,12 @@ simple % use the 'simple' rule style by default
   \ebproof@pop\ebproof@A%
   \ebproof@pop\ebproof@B%
   \ebproof@extendright\ebproof@B{\pgfkeysvalueof{/ebproof/separation}}%
-  \advance\ebproof@right\ebproof@A\wd\ebproof@B
+  \ebproof@setmark\ebproof@A{right}{%
+    ebproofmark("\ebproof@A","right")+\wd\ebproof@B}
   \ebproof@appendright\ebproof@B\ebproof@A
-  \ebproof@right\ebproof@B\ebproof@right\ebproof@A
-  \ebproof@axis\ebproof@B\ebproof@left\ebproof@B
-  \advance\ebproof@axis\ebproof@B\ebproof@right\ebproof@B
-  \divide\ebproof@axis\ebproof@B2%
+  \ebproof@setmark\ebproof@B{right}{ebproofmark("\ebproof@A","right")}%
+  \ebproof@setmark\ebproof@B{axis}{%
+    (ebproofmark("\ebproof@B","left")+ebproofmark("\ebproof@B","right"))/2}%
   \ebproof@push\ebproof@B%
   \endgroup}
 
@@ -368,32 +371,17 @@ simple % use the 'simple' rule style by default
   %
   % Compute the width and axis of the rule in C's parameters
   %
-  \@tempdima=\ebproof@right\ebproof@A
-  \advance\@tempdima-\ebproof@axis\ebproof@A
-  \@tempdimb=\ebproof@right\ebproof@B
-  \advance\@tempdimb-\ebproof@axis\ebproof@B
-  \ifdim\@tempdima>\@tempdimb
-    \ebproof@right\ebproof@C=\@tempdima
-  \else
-    \ebproof@right\ebproof@C=\@tempdimb
-  \fi
-  %
-  \@tempdima=\ebproof@axis\ebproof@A
-  \advance\@tempdima-\ebproof@left\ebproof@A
-  \@tempdimb=\ebproof@axis\ebproof@B
-  \advance\@tempdimb-\ebproof@left\ebproof@B
-  \ifdim\@tempdima>\@tempdimb
-    \ebproof@axis\ebproof@C=\@tempdima
-    \advance\ebproof@right\ebproof@C\@tempdima
-  \else
-    \ebproof@axis\ebproof@C=\@tempdimb
-    \advance\ebproof@right\ebproof@C\@tempdimb
-  \fi
+  \ebproof@setmark\ebproof@C{axis}{max(%
+    ebproofmark("\ebproof@A","axis")-ebproofmark("\ebproof@A","left"),
+    ebproofmark("\ebproof@B","axis")-ebproofmark("\ebproof@B","left"))}%
+  \ebproof@setmark\ebproof@C{right}{ebproofmark("\ebproof@C","axis")+max(%
+    ebproofmark("\ebproof@A","right")-ebproofmark("\ebproof@A","axis"),
+    ebproofmark("\ebproof@B","right")-ebproofmark("\ebproof@B","axis"))}%
   %
   % Render the rule in C's box
   %
   \setbox\ebproof@C=\vbox{%
-    \hsize=\ebproof@right\ebproof@C
+    \pgfmathsetlength\hsize{ebproofmark("\ebproof@C","right")}%
     \hrule width \hsize height 0pt\relax
     \kern\pgfkeysvalueof{/ebproof/rule margin}%
     \pgfkeysgetvalue{/ebproof/rule code}{\@rulecode}%
@@ -470,13 +458,12 @@ simple % use the 'simple' rule style by default
   \advance\@tempdima-\ht\ebproof@A
   \setbox\ebproof@A=\hbox{$#1%
     \vrule height \ht\@tempboxa depth \dp\@tempboxa width 0pt\right.$}%
-  \advance\ebproof@left\ebproof@A\wd\ebproof@A
-  \advance\ebproof@right\ebproof@A\wd\ebproof@A
-  \advance\ebproof@axis\ebproof@A\wd\ebproof@A
+  \ebproof@shiftx\ebproof@A{\wd\ebproof@A}%
   \setbox\ebproof@A=\hbox{\unhbox\ebproof@A$\left.\box\@tempboxa#2$}%
   \setbox\ebproof@A=\hbox{\raise-\@tempdima\box\ebproof@A}%
   \ebproof@push\ebproof@A%
   \endgroup}
+
 
 %%% High-level commands
 
