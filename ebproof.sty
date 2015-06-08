@@ -115,16 +115,17 @@ simple % use the 'simple' rule style by default
 
 % Proof trees are represented as a data structure that consists of a box and a
 % set of marks, which are vertical positions in the box (as distances from the
-% left edge):
+% left edge). Arbitrary marks can be defined, the folowing are used for
+% alignment:
 % - left :  the left of the conclusion
 % - right : the right of the conclusion
 % - axis :  the vertical axis of the conclusion
 %
 % TeX does not actually provide data structures, so we have to encode things.
 % We provide an allocator for "registers" holding boxes with attributes. Such
-% a register consists in a box register and a macro for each of the above
-% dimensions, holding its value textually (as a number without units for the
-% value in poins).
+% a register consists in a box register and a macro for marks, which contains
+% successive instances of |\do{name}{value}| where the value is a number
+% without units for the value in points.
 
 % Create a new register.
 
@@ -136,23 +137,50 @@ simple % use the 'simple' rule style by default
 % Set the value of a mark. The third argument is a value, parsed by pgfmath.
 
 \def\ebproof@setmark#1#2#3{%
-  \expandafter\pgfmathsetmacro
-  \csname ebproof@mark@\the#1@#2\endcsname{#3}%
+  \begingroup
+  \pgfmathparse{#3}%
+  \def\name{#2}%
+  \def\ebproof@temp{}%
+  \def\do##1##2{%
+    \def\key{##1}%
+    \ifx\key\name\else
+      \expandafter\def\expandafter\ebproof@temp\expandafter{%
+        \ebproof@temp\do{##1}{##2}}%
+    \fi
+  }\csname ebproof@marks@\the#1\endcsname
+  \def\do{\noexpand\do}%
+  \expandafter\edef\csname ebproof@marks@\the#1\endcsname
+    {\ebproof@temp\do{#2}{\pgfmathresult}}%
+  \expandafter\pgfmathsmuggle\csname ebproof@marks@\the#1\endcsname
+  \endgroup
 }
 
 % Get the value of a mark, in a pgfmath expression.
 
 \pgfmathdeclarefunction{ebproofmark}{2}{%
-  \edef\pgfmathresult{\csname ebproof@mark@\the#1@#2\endcsname}%
+  \begingroup
+  \def\name{#2}%
+  \def\check{%
+    \def\ebproof@temp{0pt}%
+    \PackageError{ebproof}{unknown mark `#2'}{}}%
+  \def\do##1##2{%
+    \def\key{##1}%
+    \ifx\key\name
+      \def\ebproof@temp{##2pt}%
+      \def\do####1####2{}%
+      \let\check\relax
+    \fi
+  }\csname ebproof@marks@\the#1\endcsname
+  \check
+  \pgfmathreturn\ebproof@temp
+  \endgroup
 }
 
 % Clear a tree register.
 
 \def\ebproof@cleartree#1{%
   \setbox#1=\box\voidb@x
-  \ebproof@setmark#1{left}{0pt}%
-  \ebproof@setmark#1{right}{0pt}%
-  \ebproof@setmark#1{axis}{0pt}%
+  \expandafter\def\csname ebproof@marks@\the#1\endcsname{}%
 }
 
 % Make a box with the axis in the middle.
@@ -254,9 +282,8 @@ simple % use the 'simple' rule style by default
 % boxes successively, and the |\lastbox| primitive allows us to pop elements
 % from there. A macro |\ebproof@stack| is used to store the dimensions
 % textually: the empty stack is an empty macro, and a non-empty stack is
-% represented as |{left}{right}{axis}{tail}|. We maintain a counter
-% |\ebproof@level| with the number of elements on the stack, for consistency
-% checks.
+% represented as |{marks}{tail}|. We maintain a counter |\ebproof@level| with
+% the number of elements on the stack, for consistency checks.
 
 \newcount\ebproof@level
 \newbox\ebproof@box@stack
@@ -275,11 +302,13 @@ simple % use the 'simple' rule style by default
   \global\advance\ebproof@level1\relax
   \global\setbox\ebproof@box@stack=\hbox{%
     \unhbox\ebproof@box@stack\copy#1}%
+  \begingroup
+  \def\do{\noexpand\do}%
   \xdef\ebproof@stack{%
-    {\csname ebproof@mark@\the#1@left\endcsname}%
-    {\csname ebproof@mark@\the#1@right\endcsname}%
-    {\csname ebproof@mark@\the#1@axis\endcsname}%
-    {\ebproof@stack}}}
+    {\csname ebproof@marks@\the#1\endcsname}%
+    {\ebproof@stack}}%
+  \endgroup
+}
 
 % Pop the value from the top of the stack into a register.
 
@@ -290,17 +319,16 @@ simple % use the 'simple' rule style by default
       \unhbox\ebproof@box@stack
       \global\setbox\ebproof@box@temp=\lastbox}%
     \setbox#1=\box\ebproof@box@temp
-    \begingroup\def\pop##1##2##3##4{\endgroup
-      \ebproof@setmark#1{left}{##1}%
-      \ebproof@setmark#1{right}{##2}%
-      \ebproof@setmark#1{axis}{##3}%
-      \gdef\ebproof@stack{##4}}%
+    \begingroup\def\pop##1##2{\endgroup
+      \expandafter\def\csname ebproof@marks@\the#1\endcsname{##1}%
+      \gdef\ebproof@stack{##2}}%
     \expandafter\pop\ebproof@stack
   \else
     \PackageError{ebproof}{%
       Missing premiss in a proof tree}{}%
     \ebproof@cleartree#1%
-  \fi}
+  \fi
+}
 
 
 %%% Stack-based operations
@@ -337,6 +365,9 @@ simple % use the 'simple' rule style by default
   \ifnum\c=0
     \ebproof@cleartree\ebproof@A%
     \setbox\ebproof@A=\hbox{}%
+    \ebproof@setmark\ebproof@A{left}{0}%
+    \ebproof@setmark\ebproof@A{right}{0}%
+    \ebproof@setmark\ebproof@A{axis}{0}%
     \ebproof@push\ebproof@A%
   \else
     \ebproof@joinh@loop
@@ -371,6 +402,7 @@ simple % use the 'simple' rule style by default
   %
   % Compute the width and axis of the rule in C's parameters
   %
+  \ebproof@setmark\ebproof@C{left}{0}%
   \ebproof@setmark\ebproof@C{axis}{max(%
     ebproofmark("\ebproof@A","axis")-ebproofmark("\ebproof@A","left"),
     ebproofmark("\ebproof@B","axis")-ebproofmark("\ebproof@B","left"))}%
