@@ -25,10 +25,6 @@
 
 \RequirePackage{pgfkeys}
 
-% The |pgfmath| package is used for computations.
-
-\RequirePackage{pgfmath}
-
 %%% Registers and internal parameters
 
 \bool_new:N \l_ebproof_updown_bool
@@ -128,64 +124,37 @@ simple % use the 'simple' rule style by default
 
 % TeX does not actually provide data structures, so we have to encode things.
 % We provide an allocator for "registers" holding boxes with attributes. Such
-% a register consists in a box register and a macro for marks, which contains
-% successive instances of |\do{name}{value}| where the value is a number
-% without units for the value in points.
+% a register consists in a box register and a property list for marks, which
+% maps mark names to values as explicit dimensions with units.
 
 % Create a new register.
 
 \cs_new:Nn \ebproof_new:N {
   \box_new:N #1
-  \ebproof_clear:N #1
+  \prop_new:c { l_ebproof_marks_ \__int_value:w #1 _prop }
 }
 
-% Set the value of a mark. The third argument is a value, parsed by pgfmath.
+% Set the value of a mark. The third argument is a dimension expression.
+
+\dim_new:N \l_ebproof_transit_dim
 
 \cs_new:Nn \ebproof_setmark:Nnn {
-  \group_begin:
-  \pgfmathparse{#3}
-  \def\name{#2}
-  \def\ebproof@temp{}
-  \def\do##1##2{
-    \def\key{##1}
-    \ifx\key\name\else
-      \expandafter\def\expandafter\ebproof@temp\expandafter{
-        \ebproof@temp\do{##1}{##2}}
-    \fi
-  }\csname ebproof@marks@\the#1\endcsname
-  \def\do{\noexpand\do}
-  \expandafter\edef\csname ebproof@marks@\the#1\endcsname
-    {\ebproof@temp\do{#2}{\pgfmathresult}}
-  \expandafter\pgfmathsmuggle\csname ebproof@marks@\the#1\endcsname
-  \endgroup
+  \dim_set:Nn \l_ebproof_transit_dim { #3 }
+  \prop_put:cnV { l_ebproof_marks_ \__int_value:w #1 _prop } { #2 }
+    \l_ebproof_transit_dim
 }
 
-% Get the value of a mark, in a pgfmath expression.
+% Get the value of a mark. This is expandable and can be used in expressions.
 
-\pgfmathdeclarefunction{ebproofmark}{2}{
-  \group_begin:
-  \def\name{#2}
-  \def\check{
-    \def\ebproof@temp{0pt}
-    \PackageError{ebproof}{unknown~mark~`#2'}{}}
-  \def\do##1##2{
-    \def\key{##1}
-    \ifx\key\name
-      \def\ebproof@temp{##2pt}
-      \def\do####1####2{}
-      \let\check\relax
-    \fi
-  }\csname ebproof@marks@\the#1\endcsname
-  \check
-  \pgfmathreturn\ebproof@temp
-  \endgroup
+\cs_new:Nn \ebproof_mark:Nn {
+  \prop_item:cn { l_ebproof_marks_ \__int_value:w #1 _prop } { #2 }
 }
 
 % Clear a tree register.
 
 \cs_new:Nn \ebproof_clear:N {
   \box_clear:N #1
-  \expandafter\def\csname ebproof@marks@\the#1\endcsname{}
+  \prop_clear:c { l_ebproof_marks_ \__int_value:w #1 _prop }
 }
 
 % Make a box with the axis in the middle.
@@ -193,8 +162,8 @@ simple % use the 'simple' rule style by default
 \cs_new:Nn \ebproof_set_simple:Nn {
   \hbox_set:Nn #1 { #2 }
   \ebproof_setmark:Nnn #1 { left } { 0pt }
-  \ebproof_setmark:Nnn #1 { axis } { \wd#1/2 }
-  \ebproof_setmark:Nnn #1 { right } { \wd#1 }
+  \ebproof_setmark:Nnn #1 { axis } { \box_wd:N #1 / 2 }
+  \ebproof_setmark:Nnn #1 { right } { \box_wd:N #1 }
 }
 
 % Push a box made of two halves, with the axis between the halves.
@@ -202,17 +171,17 @@ simple % use the 'simple' rule style by default
 \cs_new:Nn \ebproof_set_split:Nnn {
   \ebproof_setmark:Nnn #1 { left } { 0pt }
   \hbox_set:Nn #1 { #2 }
-  \ebproof_setmark:Nnn #1 { axis } { \wd#1 }
+  \ebproof_setmark:Nnn #1 { axis } { \box_wd:N #1 }
   \hbox_set:Nn #1 { \hbox_unpack:N #1 #3 }
-  \ebproof_setmark:Nnn #1 { right } { \wd#1 }
+  \ebproof_setmark:Nnn #1 { right } { \box_wd:N #1 }
 }
 
 % Shift the marks by a specified amount, without modifying the box.
 
 \cs_new:Nn \ebproof_shift_x:Nn {
-  \ebproof_setmark:Nnn #1 { left } { ebproofmark("#1","left")+#2 }
-  \ebproof_setmark:Nnn #1 { right } { ebproofmark("#1","right")+#2 }
-  \ebproof_setmark:Nnn #1 { axis } { ebproofmark("#1","axis")+#2 }
+  \ebproof_setmark:Nnn #1 { left } { \ebproof_mark:Nn#1{left}+#2 }
+  \ebproof_setmark:Nnn #1 { right } { \ebproof_mark:Nn#1{right}+#2 }
+  \ebproof_setmark:Nnn #1 { axis } { \ebproof_mark:Nn#1{axis}+#2 }
 }
 
 % Extend a box on the right by a given length.
@@ -238,7 +207,7 @@ simple % use the 'simple' rule style by default
 % matching baselines. The marks of the first tree are shifted accordingly.
 
 \cs_new:Nn \ebproof_append_left:NN {
-  \ebproof_shift_x:Nn #1{\wd#2}
+  \ebproof_shift_x:Nn #1 { \box_wd:N #2 }
   \hbox_set:Nn #1 {
     \if_hbox:N #2 \hbox_unpack:N #2 \else: \box_use:N #2 \fi:
     \if_hbox:N #1 \hbox_unpack:N #1 \else: \box_use:N #1 \fi:
@@ -249,7 +218,8 @@ simple % use the 'simple' rule style by default
 % axes. The marks of the first tree are preserved.
 
 \cs_new:Nn \ebproof_append_above:NN {
-  \pgfmathsetlength\l_tmpa_dim{ebproofmark("#2","axis")-ebproofmark("#1","axis")}
+  \dim_set:Nn \l_tmpa_dim
+    { \ebproof_mark:Nn#2{axis} - \ebproof_mark:Nn#1{axis} }
   \dim_compare:nNnTF \l_tmpa_dim < { 0pt } {
     \vbox_set:Nn #1 {
       \box_move_left:nn { \l_tmpa_dim } { \box_use:N #2 }
@@ -270,7 +240,8 @@ simple % use the 'simple' rule style by default
 % axes. The marks of the first tree are preserved.
 
 \cs_new:Nn \ebproof_append_below:NN {
-  \pgfmathsetlength\l_tmpa_dim{ebproofmark("#2","axis")-ebproofmark("#1","axis")}
+  \dim_set:Nn \l_tmpa_dim
+    { \ebproof_mark:Nn#2{axis} - \ebproof_mark:Nn#1{axis} }
   \dim_compare:nNnTF { \l_tmpa_dim } < { 0pt } {
     \vbox_set_top:Nn #1 {
       \if_vbox:N #1 \vbox_unpack:N #1 \else: \box_use:N #1 \fi:
@@ -294,11 +265,10 @@ simple % use the 'simple' rule style by default
 % provide data structures for that and the grouping mechanism is not flexible
 % enough, so we encode them using what we actually have. A stack for boxes is
 % implemented using a global hbox |\g_ebproof_stack_box| that contains all the
-% boxes successively, and the |\lastbox| primitive allows us to pop elements
-% from there. A macro | \g_ebproof_stack_seq | is used to store the dimensions
-% textually: the empty stack is an empty macro, and a non-empty stack is
-% represented as |{marks}{tail}|. We maintain a counter |\g_ebproof_level_int| with
-% the number of elements on the stack, for consistency checks.
+% boxes successively. A sequence |\g_ebproof_stack_seq| is used to store the
+% dimensions property lists textually. We maintain a counter
+% |\g_ebproof_level_int| with the number of elements on the stack, for
+% consistency checks.
 
 \int_new:N \g_ebproof_level_int
 \box_new:N \g_ebproof_stack_box
@@ -318,7 +288,8 @@ simple % use the 'simple' rule style by default
   \int_gincr:N \g_ebproof_level_int
   \hbox_gset:Nn \g_ebproof_stack_box
     { \hbox_unpack:N \g_ebproof_stack_box \box_use:N #1 }
-  \seq_gput_left:Nv \g_ebproof_stack_seq { ebproof@marks@\the#1 }
+  \seq_gput_left:Nv \g_ebproof_stack_seq
+    { l_ebproof_marks_ \__int_value:w #1 _prop }
 }
 
 % Pop the value from the top of the stack into a register.
@@ -332,7 +303,7 @@ simple % use the 'simple' rule style by default
     }
     \box_set_eq_clear:NN #1 \g_tmpa_box
     \seq_gpop_left:NN \g_ebproof_stack_seq \l_tmpa_tl
-    \tl_set_eq:cN { ebproof@marks@\the#1 } \l_tmpa_tl
+    \tl_set_eq:cN { l_ebproof_marks_ \__int_value:w #1 _prop } \l_tmpa_tl
   } {
     \PackageError{ebproof}{Missing~premiss~in~a~proof~tree}{}
     \ebproof_clear:N #1
@@ -358,13 +329,13 @@ simple % use the 'simple' rule style by default
   \ebproof_extend_right:Nn \l_ebproof_b_box
     { \pgfkeysvalueof { /ebproof/separation } }
   \ebproof_setmark:Nnn \l_ebproof_a_box { right }
-    { ebproofmark("\l_ebproof_a_box","right")+\wd\l_ebproof_b_box }
+    { \ebproof_mark:Nn\l_ebproof_a_box{right} + \box_wd:N \l_ebproof_b_box }
   \ebproof_append_right:NN \l_ebproof_b_box \l_ebproof_a_box
   \ebproof_setmark:Nnn \l_ebproof_b_box { right }
-    { ebproofmark("\l_ebproof_a_box","right") }
+    { \ebproof_mark:Nn\l_ebproof_a_box{right} }
   \ebproof_setmark:Nnn \l_ebproof_b_box { axis }
-    { ( ebproofmark("\l_ebproof_b_box","left")
-      + ebproofmark("\l_ebproof_b_box","right") )/2 }
+    { ( \ebproof_mark:Nn\l_ebproof_b_box{left}
+      + \ebproof_mark:Nn\l_ebproof_b_box{right} )/2 }
   \ebproof_push:N \l_ebproof_b_box
   \group_end:
 }
@@ -377,9 +348,9 @@ simple % use the 'simple' rule style by default
     \group_begin:
     \ebproof_clear:N \l_ebproof_a_box
     \hbox_set:Nn \l_ebproof_a_box {}
-    \ebproof_setmark:Nnn \l_ebproof_a_box { left } { 0 }
-    \ebproof_setmark:Nnn \l_ebproof_a_box { right } { 0 }
-    \ebproof_setmark:Nnn \l_ebproof_a_box { axis } { 0 }
+    \ebproof_setmark:Nnn \l_ebproof_a_box { left } { 0pt }
+    \ebproof_setmark:Nnn \l_ebproof_a_box { right } { 0pt }
+    \ebproof_setmark:Nnn \l_ebproof_a_box { axis } { 0pt }
     \ebproof_push:N \l_ebproof_a_box
     \group_end:
   }
@@ -400,19 +371,23 @@ simple % use the 'simple' rule style by default
  
   % Compute the width and axis of the rule in C's parameters
  
-  \ebproof_setmark:Nnn \l_ebproof_c_box { left } { 0 }
-  \ebproof_setmark:Nnn \l_ebproof_c_box { axis } { max(
-    ebproofmark("\l_ebproof_a_box","axis") - ebproofmark("\l_ebproof_a_box","left"),
-    ebproofmark("\l_ebproof_b_box","axis") - ebproofmark("\l_ebproof_b_box","left")) }
+  \ebproof_setmark:Nnn \l_ebproof_c_box { left } { 0pt }
+  \ebproof_setmark:Nnn \l_ebproof_c_box { axis } { \dim_max:nn
+    { \ebproof_mark:Nn\l_ebproof_a_box{axis}
+      - \ebproof_mark:Nn\l_ebproof_a_box{left} }
+    { \ebproof_mark:Nn\l_ebproof_b_box{axis}
+      - \ebproof_mark:Nn\l_ebproof_b_box{left} } }
   \ebproof_setmark:Nnn \l_ebproof_c_box { right } {
-    ebproofmark("\l_ebproof_c_box","axis") + max(
-      ebproofmark("\l_ebproof_a_box","right") - ebproofmark("\l_ebproof_a_box","axis"),
-      ebproofmark("\l_ebproof_b_box","right") - ebproofmark("\l_ebproof_b_box","axis")) }
+    \ebproof_mark:Nn\l_ebproof_c_box{axis} + \dim_max:nn
+      { \ebproof_mark:Nn\l_ebproof_a_box{right}
+        - \ebproof_mark:Nn\l_ebproof_a_box{axis} }
+      { \ebproof_mark:Nn\l_ebproof_b_box{right} 
+        - \ebproof_mark:Nn\l_ebproof_b_box{axis} } }
  
   % Render the rule in C's box
  
   \vbox_set:Nn \l_ebproof_c_box {
-    \pgfmathsetlength\hsize{ebproofmark("\l_ebproof_c_box","right")}
+    \dim_set:Nn \tex_hsize:D { \ebproof_mark:Nn\l_ebproof_c_box{right} }
     \tex_hrule:D width \tex_hsize:D height 0pt
     \tex_kern:D \pgfkeysvalueof{/ebproof/rule~margin}
     \pgfkeysgetvalue{/ebproof/rule~code}{\@rulecode}
@@ -421,7 +396,7 @@ simple % use the 'simple' rule style by default
       \unskip% so that only one margin is inserted if no rule is drawn
       \kern\pgfkeysvalueof{/ebproof/rule~margin}
     \fi
-    \tex_hrule:D  width \hsize height 0pt
+    \tex_hrule:D  width \tex_hsize:D height 0pt
   }
  
   % Compute the vertical shift of the rule for centering using \vcenter, save
@@ -440,8 +415,8 @@ simple % use the 'simple' rule style by default
   \dim_compare:nNnT { \box_wd:N \l_tmpa_box } > { 0pt } {
     \ebproof_clear:N \l_ebproof_d_box
     \hbox_set:Nn \l_ebproof_d_box {
-      \lower\l_tmpa_dim\box\l_tmpa_box
-      \kern\pgfkeysvalueof{/ebproof/label~separation}
+      \box_move_down:nn { \l_tmpa_dim } { \box_use:N \l_tmpa_box }
+      \tex_kern:D \l_ebproof_label_separation_dim
     }
     \box_set_ht:Nn \l_ebproof_d_box { 0pt }
     \box_set_dp:Nn \l_ebproof_d_box { 0pt }
@@ -496,11 +471,16 @@ simple % use the 'simple' rule style by default
   \ebproof_pop:N \l_ebproof_a_box
   \hbox_set:Nn \l_tmpa_box { $ \tex_vcenter:D { \box_use:N \l_ebproof_a_box } $ }
   \dim_set:Nn \l_tmpa_dim { \box_ht:N \l_tmpa_box - \box_ht:N \l_ebproof_a_box }
-  \hbox_set:Nn \l_ebproof_a_box { $ #1
-    \tex_vrule:D  height \ht\l_tmpa_box depth \dp\l_tmpa_box width 0pt\right.$}
-  \ebproof_shift_x:Nn \l_ebproof_a_box { \wd \l_ebproof_a_box }
-  \hbox_set:Nn \l_ebproof_a_box
-    { \hbox_unpack:N \l_ebproof_a_box $ \left. \box_use:N \l_tmpa_box #2 $ }
+  \hbox_set:Nn \l_ebproof_a_box {
+    $ #1 \tex_vrule:D
+      height \box_ht:N \l_tmpa_box depth \box_dp:N \l_tmpa_box width 0pt
+    \tex_right:D . $
+  }
+  \ebproof_shift_x:Nn \l_ebproof_a_box { \box_wd:N \l_ebproof_a_box }
+  \hbox_set:Nn \l_ebproof_a_box {
+    \hbox_unpack:N \l_ebproof_a_box
+    $ \tex_left:D . \box_use:N \l_tmpa_box #2 $
+  }
   \hbox_set:Nn \l_ebproof_a_box
     { \box_move_down:nn { \l_tmpa_dim } { \box_use:N \l_ebproof_a_box } }
   \ebproof_push:N \l_ebproof_a_box
@@ -554,7 +534,7 @@ simple % use the 'simple' rule style by default
   \ebproof_set_split:Nnn \l_ebproof_a_box { } {
     \vbox_set:Nn \l_tmpa_box {
       \tex_kern:D 1.2ex
-      \hbox:n { \ignorespaces #1 }
+      \hbox:n { \tex_ignorespaces:D #1 }
       \tex_hrule:D height 0pt
       \tex_kern:D 1.2ex
     }
