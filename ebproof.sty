@@ -19,6 +19,7 @@
 
 \NeedsTeXFormat{LaTeX2e}
 \RequirePackage{expl3}
+\RequirePackage{xparse}
 \ProvidesExplPackage{ebproof}{2015/05/30}{1.2pre}{EB's proof trees}
 
 % The |pgfkeys| package is used for the parameters in proof construction.
@@ -34,9 +35,7 @@
 
 %%% Parameters
 
-\def\ebproofset#1{\pgfqkeys{/ebproof}{#1}}
-
-\ebproofset{
+\pgfqkeys { /ebproof } {
 
 % general shape
 
@@ -493,7 +492,7 @@ simple % use the 'simple' rule style by default
 % Push a box with default formatting, using explicit alignment if the code
 % contains a |&| character
 
-\cs_new:Npn \ebproof_hypo_parse:w #1&#2&#3\ebproof_hypo_stop: {
+\cs_new:Npn \ebproof_statement_parse:w #1&#2&#3\ebproof_statement_stop: {
   \group_begin:
   \tl_if_empty:nTF { #3 } {
     \ebproof_set_simple:Nn \l_ebproof_a_box
@@ -507,24 +506,9 @@ simple % use the 'simple' rule style by default
   \group_end:
 }
 
-\newcommand\ebproof@hypo[2][]{
-  {\ebproofset{#1} \ebproof_hypo_parse:w #2&& \ebproof_hypo_stop: }}
-
-% Build a n-ary rule
-
-\def\ebproof@infer{
-  \@ifnextchar[{\ebproof@infer@}{\ebproof@infer@[]}}
-\def\ebproof@infer@[#1]#2{
-  \@ifnextchar[
-    {\ebproof@infer@with@label{#1}{#2}}
-    {\ebproof@infer@@{#1}{#2}}}
-\def\ebproof@infer@with@label#1#2[#3]{
-  \ebproof@infer@@{#1,right~label={#3}}{#2}}
-\def\ebproof@infer@@#1#2#3{{
-  \pgfqkeys{/ebproof/rule~style}{.search~also=/ebproof,#1}
-  \ebproof_join_horizontal:n {#2}
-  \ebproof@hypo{#3}
-  \ebproof_join_vertical: }}
+\cs_new:Nn \ebproof_push_statement:n {
+  \ebproof_statement_parse:w #1&& \ebproof_statement_stop:
+}
 
 % Ellipsis with vertical dots
 
@@ -547,56 +531,68 @@ simple % use the 'simple' rule style by default
   }
   \ebproof_push:N \l_ebproof_a_box
   \ebproof_join_vertical: 
-  \ebproof@hypo{#2}
+  \ebproof_push_statement:n {#2}
   \ebproof_join_vertical:
   \group_end:
 }
 
-%%% Environment interface
+
+%%% Document interface
+
+\NewDocumentCommand \ebproofset { m } {
+  \pgfqkeys { /ebproof } { #1 }
+}
+
+\NewDocumentCommand \ebproofhypo { O{} m } {
+  \group_begin:
+  \pgfqkeys { /ebproof } { #1 }
+  \ebproof_push_statement:n { #2 }
+  \group_end:
+}
+
+\NewDocumentCommand \ebproofinfer { O{} m O{} m } {
+  \group_begin:
+  \pgfqkeys { /ebproof/rule~style }
+    { .search~also=/ebproof, #1, right~label={#3} }
+  \ebproof_join_horizontal:n { #2 }
+  \ebproof_push_statement:n { #4 }
+  \ebproof_join_vertical:
+  \group_end:
+}
 
 \ebproof_clear_stack:
 
 \tl_new:N \l_ebproof_start_level_tl
 
-\cs_new:Nn \ebproof_begin: {
+\NewDocumentEnvironment { prooftree } { s O{} } {
+  \pgfqkeys { /ebproof/proof~style } { .search~also=/ebproof, #2 }
   \tl_set:Nx \l_ebproof_start_level_tl { \int_use:N \g_ebproof_level_int }
   \vbox_set:Nw \l_tmpa_box
-  \cs_set_eq:NN \Hypo \ebproof@hypo
-  \cs_set_eq:NN \Infer \ebproof@infer
+  \cs_set_eq:NN \Hypo \ebproofhypo
+  \cs_set_eq:NN \Infer \ebproofinfer
   \cs_set_eq:NN \Ellipsis \ebproof_ellipsis:nn
   \cs_set_eq:NN \Alter \ebproof_alter:n
   \cs_set_eq:NN \Delims \ebproof_delims:nn
-}
-
-\cs_new:Nn \ebproof_end: {
+} {
   \vbox_set_end:
   \ebproof_pop:N \l_ebproof_a_box
   \int_compare:nNnF { \g_ebproof_level_int } = { \tl_use:N \l_ebproof_start_level_tl } {
     \PackageError{ebproof}{Malformed proof tree}{
       Some hypotheses were declared but not used in this tree.}
   }
-  \bool_if:NTF \l_ebproof_center_bool {
-    \hbox:n { $ \tex_vcenter:D { \box_use:N \l_ebproof_a_box } $ }
+  \IfBooleanTF { #1 } {
+    \[ \box_use:N \l_ebproof_a_box \]
+    \tex_ignorespaces:D
   } {
-    \box_use:N \l_ebproof_a_box
+    \hbox_unpack:N \c_empty_box
+    \bool_if:NTF \l_ebproof_center_bool {
+      \hbox:n { $ \tex_vcenter:D { \box_use:N \l_ebproof_a_box } $ }
+    } {
+      \box_use:N \l_ebproof_a_box
+    }
   }
 }
 
-\newenvironment{prooftree}[1][]{
-  \pgfqkeys{/ebproof/proof~style}{.search~also=/ebproof,#1}
-  \hbox_unpack:N \c_empty_box
-  \ebproof_begin: 
-} {
-  \ebproof_end:
-}
-
-\newenvironment{prooftree*}[1][]{
-  \[
-  \pgfqkeys{/ebproof/proof~style}{.search~also=/ebproof,#1}
-  \hbox_unpack:N \c_empty_box
-  \ebproof_begin: 
-}{
-  \ebproof_end: 
-  \]
-  \tex_ignorespaces:D
-}
+% A trick for the starred version:
+\cs_new:cpn { prooftree* } { \prooftree* }
+\cs_new:cpn { endprooftree* } { \endprooftree }
