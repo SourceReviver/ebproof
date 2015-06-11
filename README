@@ -12,7 +12,8 @@ The distribution includes the following files:
  - ebproof.pdf : the documentation
  - ebproof.tex : the LaTeX source for the documentation
 
-The package requires pgfkeys (from TikZ/PGF) for the option system.
+The package requires expl3 (the LaTeX3 programming environment) whici provides
+many useful programming tools.
 
 
 == License ==

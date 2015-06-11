@@ -22,92 +22,105 @@
 \RequirePackage{xparse}
 \ProvidesExplPackage{ebproof}{2015/05/30}{1.2pre}{EB's proof trees}
 
-% The |pgfkeys| package is used for the parameters in proof construction.
-
-\RequirePackage{pgfkeys}
-
-%%% Registers and internal parameters
-
-\bool_new:N \l_ebproof_updown_bool
-
-\bool_new:N \l_ebproof_center_bool
-\bool_set_true:N \l_ebproof_center_bool
 
 %%% Parameters
 
-\pgfqkeys { /ebproof } {
+%% Declaration of the parameters
+
+\keys_define:nn { ebproof } {
 
 % general shape
 
-center/.is~choice,
-center/.default=true,
-center/true/.code={\bool_set_true:N \l_ebproof_center_bool},
-center/false/.code={\bool_set_false:N \l_ebproof_center_bool},
-proof~style/.is~choice,
-proof~style/upwards/.code={\bool_set_false:N \l_ebproof_updown_bool},
-proof~style/downwards/.code={\bool_set_true:N \l_ebproof_updown_bool},
+center .bool_set:N = \l_ebproof_center_bool,
+
+proof~style .choice: ,
+proof~style / upwards .code:n = \bool_set_false:N \l_ebproof_updown_bool,
+proof~style / downwards .code:n = \bool_set_true:N \l_ebproof_updown_bool,
 
 % spacing
 
-separation/.initial=1.5em,
-rule~margin/.initial=.7ex,
+separation .dim_set:N = \l_ebproof_separation_dim,
+rule~margin .dim_set:N = \l_ebproof_rule_margin_dim,
 
 % shape of inference lines
 
-rule~thickness/.initial=.4pt,
-rule~separation/.initial=2pt,
-rule~dash~length/.initial=.2em,
-rule~dash~space/.initial=.3em,
-rule~code/.initial=,
+rule~thickness .dim_set:N = \l_ebproof_rule_thickness_dim,
+rule~separation .dim_set:N = \l_ebproof_rule_separation_dim,
+rule~dash~length .dim_set:N = \l_ebproof_rule_dash_length_dim,
+rule~dash~space .dim_set:N = \l_ebproof_rule_dash_space_dim,
+rule~code .tl_set:N = \l_ebproof_rule_code_tl,
+
+rule~style .choice:,
+
+rule~style / simple .meta:nn = { ebproof } {
+  rule~code = { \tex_hrule:D height \l_ebproof_rule_thickness_dim }
+},
+
+rule~style / no~rule .meta:nn = { ebproof } {
+  rule~code =
+},
+
+rule~style / double .meta:nn = { ebproof } {
+  rule~code = {
+    \tex_hrule:D height \l_ebproof_rule_thickness_dim
+    \tex_kern:D \l_ebproof_rule_separation_dim
+    \tex_hrule:D height \l_ebproof_rule_thickness_dim
+  }
+},
+
+rule~style / dashed .meta:nn = { ebproof } {
+  rule~code = {
+    \hbox_to_wd:nn { \tex_hsize:D } {
+      \dim_set:Nn \l_tmpa_dim { \l_ebproof_rule_dash_space_dim / 2 }
+      \tex_kern:D -\l_tmpa_dim
+      \tex_cleaders:D \hbox:n {
+        \tex_kern:D \l_tmpa_dim
+        \tex_vrule:D 
+          height \l_ebproof_rule_thickness_dim
+          width \l_ebproof_rule_dash_length_dim
+        \tex_kern:D \l_tmpa_dim
+      }\tex_hfill:D
+      \tex_kern:D -\l_tmpa_dim
+    }
+  }
+},
 
 % templates
 
-template/.initial=$\inserttext$,
-left~template/.initial=$\inserttext\mathrel{}$,
-right~template/.initial=$\mathrel{}\inserttext$,
+template .tl_set:N = \l_ebproof_template_tl,
+left~template .tl_set:N = \l_ebproof_left_template_tl,
+right~template .tl_set:N = \l_ebproof_right_template_tl,
 
 % labels
 
-left~label/.initial=,
-right~label/.initial=,
-left~label~template/.initial=\inserttext,
-right~label~template/.initial=\inserttext,
-label~separation/.initial=0.5em,
+left~label .tl_set:N = \l_ebproof_left_label_tl,
+right~label .tl_set:N = \l_ebproof_right_label_tl,
+left~label~template .tl_set:N = \l_ebproof_left_label_template_tl,
+right~label~template .tl_set:N = \l_ebproof_right_label_template_tl,
+label~separation .dim_set:N = \l_ebproof_label_separation_dim,
+
 }
 
-% Rule styles
+%% Default values
 
-\pgfqkeys{/ebproof/rule~style}{
-.is~choice,
-.search~also=/ebproof,
-simple/.style={/ebproof/rule~code={
-  \tex_hrule:D height \pgfkeysvalueof{/ebproof/rule~thickness}\relax
-}},
-
-no~rule/.style={/ebproof/rule~code=},
-
-double/.style={/ebproof/rule~code={
-  \tex_hrule:D height \pgfkeysvalueof{/ebproof/rule~thickness}
-  \tex_kern:D \pgfkeysvalueof{/ebproof/rule~separation}
-  \tex_hrule:D height \pgfkeysvalueof{/ebproof/rule~thickness}
-}},
-
-dashed/.style={/ebproof/rule~code={
-  \hbox_to_wd:nn { \tex_hsize:D } {
-    \dim_set:Nn \l_tmpa_dim { \pgfkeysvalueof{/ebproof/rule~dash~space} / 2 }
-    \tex_kern:D -\l_tmpa_dim
-    \tex_cleaders:D \hbox:n {
-      \tex_kern:D \l_tmpa_dim
-      \tex_vrule:D 
-        height \pgfkeysvalueof{/ebproof/rule~thickness}
-        width \pgfkeysvalueof{/ebproof/rule~dash~length}
-      \tex_kern:D \l_tmpa_dim
-    }\tex_hfill:D
-    \tex_kern:D -\l_tmpa_dim
-  }
-}},
-
-simple % use the 'simple' rule style by default
+\keys_set:nn { ebproof } {
+  center = true,
+  proof~style = upwards,
+  separation = 1.5em,
+  rule~margin = .7ex,
+  rule~thickness = .4pt,
+  rule~separation = 2pt,
+  rule~dash~length = .2em,
+  rule~dash~space = .3em,
+  rule~style = simple,
+  template = $\inserttext$,
+  left~template = $\inserttext\mathrel{}$,
+  right~template = $\mathrel{}\inserttext$,
+  left~label = ,
+  right~label = ,
+  left~label~template = \inserttext,
+  right~label~template = \inserttext,
+  label~separation = 0.5em,
 }
 
 
@@ -325,8 +338,7 @@ simple % use the 'simple' rule style by default
   \group_begin:
   \ebproof_pop:N \l_ebproof_a_box
   \ebproof_pop:N \l_ebproof_b_box
-  \ebproof_extend_right:Nn \l_ebproof_b_box
-    { \pgfkeysvalueof { /ebproof/separation } }
+  \ebproof_extend_right:Nn \l_ebproof_b_box { \l_ebproof_separation_dim }
   \ebproof_setmark:Nnn \l_ebproof_a_box { right }
     { \ebproof_mark:Nn\l_ebproof_a_box{right} + \box_wd:N \l_ebproof_b_box }
   \ebproof_append_right:NN \l_ebproof_b_box \l_ebproof_a_box
@@ -388,13 +400,12 @@ simple % use the 'simple' rule style by default
   \vbox_set:Nn \l_ebproof_c_box {
     \dim_set:Nn \tex_hsize:D { \ebproof_mark:Nn\l_ebproof_c_box{right} }
     \tex_hrule:D width \tex_hsize:D height 0pt
-    \tex_kern:D \pgfkeysvalueof{/ebproof/rule~margin}
-    \pgfkeysgetvalue{/ebproof/rule~code}{\@rulecode}
-    \ifx\@rulecode\@empty\else
-      \@rulecode
-      \unskip% so that only one margin is inserted if no rule is drawn
-      \kern\pgfkeysvalueof{/ebproof/rule~margin}
-    \fi
+    \tex_kern:D \l_ebproof_rule_margin_dim
+    \tl_if_empty:NF { \l_ebproof_rule_code_tl } {
+      \tl_use:N \l_ebproof_rule_code_tl
+      \tex_unskip:D % so that only one margin is inserted if no rule is drawn
+      \tex_kern:D \l_ebproof_rule_margin_dim
+    }
     \tex_hrule:D  width \tex_hsize:D height 0pt
   }
  
@@ -408,8 +419,8 @@ simple % use the 'simple' rule style by default
   % Render the labels and append them.
  
   \hbox_set:Nn \l_tmpa_box {
-    \def\inserttext{\pgfkeysvalueof{/ebproof/left~label}}
-    \pgfkeysvalueof{/ebproof/left~label~template}
+    \cs_set_eq:NN \inserttext \l_ebproof_left_label_tl
+    \tl_use:N \l_ebproof_left_label_template_tl
   }
   \dim_compare:nNnT { \box_wd:N \l_tmpa_box } > { 0pt } {
     \ebproof_clear:N \l_ebproof_d_box
@@ -423,13 +434,13 @@ simple % use the 'simple' rule style by default
   }
 
   \hbox_set:Nn \l_tmpa_box {
-    \def\inserttext{\pgfkeysvalueof{/ebproof/right~label}}
-    \pgfkeysvalueof{/ebproof/right~label~template}
+    \cs_set_eq:NN \inserttext \l_ebproof_right_label_tl
+    \tl_use:N \l_ebproof_right_label_template_tl
   }
   \dim_compare:nNnT { \box_wd:N \l_tmpa_box } > { 0pt } {
     \ebproof_clear:N \l_ebproof_d_box
     \hbox_set:Nn \l_ebproof_d_box {
-      \tex_kern:D \pgfkeysvalueof{/ebproof/label~separation}
+      \tex_kern:D \l_ebproof_label_separation_dim
       \box_move_down:nn { \l_tmpa_dim } { \box_use:N \l_tmpa_box }
     }
     \box_set_ht:Nn \l_ebproof_d_box { 0pt }
@@ -468,8 +479,10 @@ simple % use the 'simple' rule style by default
 \cs_new:Nn \ebproof_delims:nn {
   \group_begin:
   \ebproof_pop:N \l_ebproof_a_box
-  \hbox_set:Nn \l_tmpa_box { $ \tex_vcenter:D { \box_use:N \l_ebproof_a_box } $ }
-  \dim_set:Nn \l_tmpa_dim { \box_ht:N \l_tmpa_box - \box_ht:N \l_ebproof_a_box }
+  \hbox_set:Nn \l_tmpa_box
+    { $ \tex_vcenter:D { \box_use:N \l_ebproof_a_box } $ }
+  \dim_set:Nn \l_tmpa_dim
+    { \box_ht:N \l_tmpa_box - \box_ht:N \l_ebproof_a_box }
   \hbox_set:Nn \l_ebproof_a_box {
     $ #1 \tex_vrule:D
       height \box_ht:N \l_tmpa_box depth \box_dp:N \l_tmpa_box width 0pt
@@ -496,11 +509,11 @@ simple % use the 'simple' rule style by default
   \group_begin:
   \tl_if_empty:nTF { #3 } {
     \ebproof_set_simple:Nn \l_ebproof_a_box
-      {\def\inserttext{#1}\pgfkeysvalueof{/ebproof/template}}
+      { \cs_set:Npn \inserttext { #1 } \tl_use:N \l_ebproof_template_tl }
   } {
     \ebproof_set_split:Nnn \l_ebproof_a_box
-      {\def\inserttext{#1}\pgfkeysvalueof{/ebproof/left~template}}
-      {\def\inserttext{#2}\pgfkeysvalueof{/ebproof/right~template}}
+      { \cs_set:Npn \inserttext { #1 } \tl_use:N \l_ebproof_left_template_tl }
+      { \cs_set:Npn \inserttext { #2 } \tl_use:N \l_ebproof_right_template_tl }
   }
   \ebproof_push:N \l_ebproof_a_box
   \group_end:
@@ -514,7 +527,7 @@ simple % use the 'simple' rule style by default
 
 \cs_new:Nn \ebproof_ellipsis:nn {
   \group_begin:
-  \ebproofset{rule~code=}
+  \tl_clear:N \l_ebproof_rule_code_tl
   \ebproof_set_split:Nnn \l_ebproof_a_box { } {
     \vbox_set:Nn \l_tmpa_box {
       \tex_kern:D 1.2ex
@@ -540,20 +553,21 @@ simple % use the 'simple' rule style by default
 %%% Document interface
 
 \NewDocumentCommand \ebproofset { m } {
-  \pgfqkeys { /ebproof } { #1 }
+  \keys_set:nn { ebproof } { #1 }
 }
 
 \NewDocumentCommand \ebproofhypo { O{} m } {
   \group_begin:
-  \pgfqkeys { /ebproof } { #1 }
+  \keys_set:nn { ebproof } { #1 }
   \ebproof_push_statement:n { #2 }
   \group_end:
 }
 
 \NewDocumentCommand \ebproofinfer { O{} m O{} m } {
   \group_begin:
-  \pgfqkeys { /ebproof/rule~style }
-    { .search~also=/ebproof, #1, right~label={#3} }
+  \keys_set_known:nnN { ebproof / rule~style } { #1 } \l_tmpa_tl
+  \keys_set:nV { ebproof } \l_tmpa_tl
+  \tl_set:Nn \l_ebproof_right_label_tl { #3 }
   \ebproof_join_horizontal:n { #2 }
   \ebproof_push_statement:n { #4 }
   \ebproof_join_vertical:
@@ -565,7 +579,8 @@ simple % use the 'simple' rule style by default
 \tl_new:N \l_ebproof_start_level_tl
 
 \NewDocumentEnvironment { prooftree } { s O{} } {
-  \pgfqkeys { /ebproof/proof~style } { .search~also=/ebproof, #2 }
+  \keys_set_known:nnN { ebproof / proof~style } { #2 } \l_tmpa_tl
+  \keys_set:nV { ebproof } \l_tmpa_tl
   \tl_set:Nx \l_ebproof_start_level_tl { \int_use:N \g_ebproof_level_int }
   \vbox_set:Nw \l_tmpa_box
   \cs_set_eq:NN \Hypo \ebproofhypo

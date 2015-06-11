@@ -264,10 +264,8 @@ last proof tree on the stack:
 \label{sec:options}
 
 The formatting of trees, conclusion texts and inference rules is affected by
-options, specfied using the key-value system of PGF/TikZ, provided by the
-\package{pgfkeys} package.
-All options are in the \lit{/ebproof/} path in the key tree of
-\package{pgfkeys}.
+options, specfied using the \LaTeX3 key-value system.
+All options are in the \lit{ebproof} module in the key tree.
 They can be set locally for a proof tree or for a single statement using
 optional arguments in the associated commands.
 
@@ -436,16 +434,18 @@ For instance, \cs{Infer}\lit{[dashed]} is equivalent to
   \package{decorations.pathmorphing} library for the \lit{snake} decoration.
 \end{csdoc}
 
-The option \opt{rule code} is particularly useful in a ``styles'' in the sense of
-\package{pgfkeys} as it allows to define new rule styles.
+The option \opt{rule code} is particularly useful in a ``meta-key'' in the
+sense of \LaTeX3 keys as it allows to define new rule styles.
 The allowed values for \opt{rule style} are actually defined this way.
 The above example could be turned into a new rule style \lit{zigzag} with the
 following command:
 \begin{example}{gobble=2}
-  \ebproofset{
-    rule style/zigzag/.style={rule code={\hbox{\tikz
+  \ExplSyntaxOn
+  \keys_define:nn { ebproof / rule~style } {
+    zigzag .meta:n = { rule~code = { \hbox{\tikz
       \draw[decorate,decoration={snake,amplitude=.3ex}]
-      (0,0) -- (\hsize,0);}}}}
+      (0,0) -- (\hsize,0);} }}}
+  \ExplSyntaxOff
   \begin{prooftree}
     \Hypo{ \Gamma &\vdash A }
     \Infer1{ \Gamma &\vdash A, \ldots, A }
