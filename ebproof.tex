@@ -40,7 +40,7 @@
 \newcommand\env[1]{\lit{#1}}
 \newcommand\opt[1]{\lit{#1}}
 \newcommand\meta[1]{$\langle$\textit{#1}$\rangle$}
-\newcommand\oarg[1]{\lit{[}\meta{#1}\lit{]}}
+\newcommand\oarg[1]{\lit[\meta{#1}\lit]}
 \newcommand\marg[1]{\lit{\{}\meta{#1}\lit{\}}}
 
 \newenvironment{csdoc}[1]{%
@@ -107,7 +107,7 @@ starred variants.
     \cs{begin}\lit{\{prooftree\}}\oarg{options}
       \meta{statements}
     \cs{end}\lit{\{prooftree\}}}
-  Typeset the proof tree desribed by the \meta{statements}, as described in
+  Typeset the proof tree described by the \meta{statements}, as described in
   section~\ref{sec:statements}.
   The \meta{options} provide default formatting options for the proof tree.
   This environment can be used either in math mode or in text mode.
@@ -118,8 +118,8 @@ starred variants.
     \cs{begin}\lit{\{prooftree*\}}\oarg{options}
       \meta{statements}
     \cs{end}\lit{\{prooftree*\}}}
-  Typeset the proof centered on a line of its own; it is essentially
-  equivalent to wrapping the \env{prooftree} environment inside a \env{center}
+  Typeset the proof on a line of its own; it is essentially equivalent to
+  wrapping the \env{prooftree} environment inside a displayed math
   environment.
 \end{csdoc}
 
@@ -148,7 +148,7 @@ larger structure, like two parts of a formula:
 \section{Statements}
 \label{sec:statements}
 
-Statements describes proofs in postfix notation: when typesetting a proof tree
+Statements describe proofs in postfix notation: when typesetting a proof tree
 whose last rule has, say, two premisses, you will first write statements for
 the subtree of the first premiss, then statements for the subtree of the
 second premiss, then a statement like \cs{Infer2}\{\meta{conclusion}\} to
@@ -264,7 +264,7 @@ last proof tree on the stack:
 \label{sec:options}
 
 The formatting of trees, conclusion texts and inference rules is affected by
-options, specfied using the \LaTeX3 key-value system.
+options, specified using the \LaTeX3 key-value system.
 All options are in the \lit{ebproof} module in the key tree.
 They can be set locally for a proof tree or for a single statement using
 optional arguments in the associated commands.
