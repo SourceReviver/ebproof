@@ -592,12 +592,12 @@ label~separation .dim_set:N = \l_ebproof_label_separation_dim,
   \vbox_set_end:
   \ebproof_pop:N \l_ebproof_a_box
   \int_compare:nNnF { \g_ebproof_level_int } = { \tl_use:N \l_ebproof_start_level_tl } {
-    \PackageError{ebproof}{Malformed proof tree}{
-      Some hypotheses were declared but not used in this tree.}
+    \PackageError{ebproof}{Malformed~proof~tree}{
+      Some~hypotheses~were~declared~but~not~used~in~this~tree.}
   }
   \IfBooleanTF { #1 } {
     \[ \box_use:N \l_ebproof_a_box \]
-    \tex_ignorespaces:D
+    \ignorespacesafterend
   } {
     \hbox_unpack:N \c_empty_box
     \bool_if:NTF \l_ebproof_center_bool {
