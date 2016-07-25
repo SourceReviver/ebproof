@@ -52,39 +52,6 @@ rule~code .tl_set:N = \l_ebproof_rule_code_tl,
 
 rule~style .choice:,
 
-rule~style / simple .meta:nn = { ebproof } {
-  rule~code = { \tex_hrule:D height \l_ebproof_rule_thickness_dim }
-},
-
-rule~style / no~rule .meta:nn = { ebproof } {
-  rule~code =
-},
-
-rule~style / double .meta:nn = { ebproof } {
-  rule~code = {
-    \tex_hrule:D height \l_ebproof_rule_thickness_dim
-    \tex_kern:D \l_ebproof_rule_separation_dim
-    \tex_hrule:D height \l_ebproof_rule_thickness_dim
-  }
-},
-
-rule~style / dashed .meta:nn = { ebproof } {
-  rule~code = {
-    \hbox_to_wd:nn { \tex_hsize:D } {
-      \dim_set:Nn \l_tmpa_dim { \l_ebproof_rule_dash_space_dim / 2 }
-      \tex_kern:D -\l_tmpa_dim
-      \tex_cleaders:D \hbox:n {
-        \tex_kern:D \l_tmpa_dim
-        \tex_vrule:D 
-          height \l_ebproof_rule_thickness_dim
-          width \l_ebproof_rule_dash_length_dim
-        \tex_kern:D \l_tmpa_dim
-      }\tex_hfill:D
-      \tex_kern:D -\l_tmpa_dim
-    }
-  }
-},
-
 % templates
 
 template .tl_set:N = \l_ebproof_template_tl,
@@ -99,6 +66,47 @@ left~label~template .tl_set:N = \l_ebproof_left_label_template_tl,
 right~label~template .tl_set:N = \l_ebproof_right_label_template_tl,
 label~separation .dim_set:N = \l_ebproof_label_separation_dim,
 
+}
+
+%% Rule styles
+
+\NewDocumentCommand \ebproofnewrulestyle { mm } {
+  \keys_define:nn { ebproof } {
+    rule~style / #1 .meta:nn = { ebproof } { #2 }
+  }
+}
+
+\ebproofnewrulestyle { simple } {
+  rule~code = { \tex_hrule:D height \l_ebproof_rule_thickness_dim }
+}
+
+\ebproofnewrulestyle { no~rule } {
+  rule~code =
+}
+
+\ebproofnewrulestyle { double } {
+  rule~code = {
+    \tex_hrule:D height \l_ebproof_rule_thickness_dim
+    \tex_kern:D \l_ebproof_rule_separation_dim
+    \tex_hrule:D height \l_ebproof_rule_thickness_dim
+  }
+}
+
+\ebproofnewrulestyle { dashed } {
+  rule~code = {
+    \hbox_to_wd:nn { \tex_hsize:D } {
+      \dim_set:Nn \l_tmpa_dim { \l_ebproof_rule_dash_space_dim / 2 }
+      \tex_kern:D -\l_tmpa_dim
+      \tex_cleaders:D \hbox:n {
+        \tex_kern:D \l_tmpa_dim
+        \tex_vrule:D 
+          height \l_ebproof_rule_thickness_dim
+          width \l_ebproof_rule_dash_length_dim
+        \tex_kern:D \l_tmpa_dim
+      }\tex_hfill:D
+      \tex_kern:D -\l_tmpa_dim
+    }
+  }
 }
 
 %% Default values
@@ -121,6 +129,12 @@ label~separation .dim_set:N = \l_ebproof_label_separation_dim,
   left~label~template = \inserttext,
   right~label~template = \inserttext,
   label~separation = 0.5em,
+}
+
+%% Defining style macros
+
+\NewDocumentCommand \ebproofnewstyle { mm } {
+  \keys_define:nn { ebproof } { #1 .meta:n = { #2 } }
 }
 
 

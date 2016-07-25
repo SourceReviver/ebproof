@@ -375,7 +375,8 @@ For instance, the first line of the example above could be written
   \end{csdoc}
   The precise rendering is influenced by parameters specified below.
   Arbitrary new shapes can defined using the \lit{rule code} option described
-  afterwards.
+  below and the \cs{ebproofnewrulestyle} command described in
+  section~\ref{sec:styles}.
 \end{csdoc}
 
 In the optional argument of the \cs{Infer} statement, rule styles can be
@@ -434,26 +435,6 @@ For instance, \cs{Infer}\lit{[dashed]} is equivalent to
   \package{decorations.pathmorphing} library for the \lit{snake} decoration.
 \end{csdoc}
 
-The option \opt{rule code} is particularly useful in a ``meta-key'' in the
-sense of \LaTeX3 keys as it allows to define new rule styles.
-The allowed values for \opt{rule style} are actually defined this way.
-The above example could be turned into a new rule style \lit{zigzag} with the
-following command:
-\begin{example}{gobble=2}
-  \ExplSyntaxOn
-  \keys_define:nn { ebproof / rule~style } {
-    zigzag .meta:n = { rule~code = { \hbox{\tikz
-      \draw[decorate,decoration={snake,amplitude=.3ex}]
-      (0,0) -- (\hsize,0);} }}}
-  \ExplSyntaxOff
-  \begin{prooftree}
-    \Hypo{ \Gamma &\vdash A }
-    \Infer1{ \Gamma &\vdash A, \ldots, A }
-    \Hypo{ \Delta, A, \ldots, A \vdash \Theta }
-    \Infer[zigzag]2{ \Gamma, \Delta \vdash \Theta }
-  \end{prooftree}
-\end{example}
-
 \subsection{Format of conclusions}
 
 \begin{csdoc}{%
@@ -507,6 +488,56 @@ following command:
 \begin{csdoc}{\opt{label separation=}\meta{dimension}}
   The spacing between an inference lines and its labels.
   The default value is \lit{0.5em}.
+\end{csdoc}
+
+
+\subsection{Style macros}
+\label{label:styles}
+
+The following commands allow for the definition of custom styles using the
+basic style options, in a way similar to PGF's ``styles'' and \LaTeX3's
+``meta-keys''.
+This allows setting a bunch of options with the same values in many proofs
+using a single definition.
+
+\begin{csdoc}{\cs{ebproofnewstyle}\marg{name}\marg{options}}
+  Define a new style option \meta{name} that sets the given \meta{options}.
+
+  For instance, the following code defines a new option \opt{small} that sets
+  various parameters so that proofs are rendered smaller.
+  \begin{example}{gobble=4}
+    \ebproofnewstyle{small}{
+      separation = 1em, rule margin = .5ex,
+      template = \footnotesize$\inserttext$ }
+    \begin{prooftree}[small]
+      \Hypo{ \Gamma, A \vdash B }
+      \Infer1{ \Gamma \vdash A\to B }
+      \Hypo{ \Gamma \vdash A } \Infer2{ \Gamma \vdash B }
+    \end{prooftree}
+  \end{example}
+\end{csdoc}
+
+\begin{csdoc}{\cs{ebproofnewrulestyle}\marg{name}\marg{options}}
+  Define a new rule style.
+  The \meta{options} part includes options used to set how to draw rules in
+  the new style.
+
+  The option \opt{rule code} is useful in this command as it allows to
+  define arbitrary rule styles.
+  For instance, the squiggly rule example above could be turned into a new
+  rule style \lit{zigzag} with the following code:
+  \begin{example}{gobble=4}
+    \ebproofnewrulestyle{zigzag}{
+      rule code = {\hbox{\tikz
+        \draw[decorate,decoration={snake,amplitude=.3ex}]
+        (0,0) -- (\hsize,0);}}}
+    \begin{prooftree}
+      \Hypo{ \Gamma &\vdash A }
+      \Infer1{ \Gamma &\vdash A, \ldots, A }
+      \Hypo{ \Delta, A, \ldots, A \vdash \Theta }
+      \Infer[zigzag]2{ \Gamma, \Delta \vdash \Theta }
+    \end{prooftree}
+  \end{example}
 \end{csdoc}
 
 
