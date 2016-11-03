@@ -132,13 +132,13 @@ larger structure, like two parts of a formula:
 \begin{example}{gobble=2}
   \[
     \begin{prooftree}
-      \Hypo{ \vdash A }
+      \Infer0{ \vdash A }
       \Hypo{ \vdash B } \Infer1{ \vdash B, C }
       \Infer2{ \vdash A\wedge B, C }
     \end{prooftree}
     \quad \rightsquigarrow \quad
     \begin{prooftree}
-      \Hypo{ \vdash A } \Hypo{ \vdash B }
+      \Infer0{ \vdash A } \Hypo{ \vdash B }
       \Infer2{ \vdash A\wedge B }
       \Infer1{ \vdash A\wedge B, C }
     \end{prooftree}
@@ -443,7 +443,7 @@ For instance, \cs{Infer}\lit{[dashed]} is equivalent to
     \opt{right template=}\meta{code}}
   Defines how conclusions are formatted.
   The code is arbitrary \TeX\ code, composed in horizontal mode.
-  The macro \cs{inserttext} can be used inside the actual text passed to the
+  The macro \cs{inserttext} is used to insert the actual text passed to the
   \cs{Hypo} and \cs{Infer} statements.
   The \opt{template} value is used for conclusions with no alignment mark.
   The \opt{left template} and \opt{right template} values are used on the left
@@ -473,6 +473,16 @@ For instance, \cs{Infer}\lit{[dashed]} is equivalent to
   of the inference line.
   Using the second optional argument in \cs{Infer} is equivalent to setting
   the \env{right label} option with the value of that argument.
+
+  \begin{example}{gobble=4}
+    \begin{prooftree}
+      \Hypo{ \Gamma, A &\vdash B }
+      \Infer[left label=$\lambda$]1[abs]
+        { \Gamma &\vdash A\to B }
+      \Hypo{ \Gamma \vdash A }
+      \Infer[left label=@]2[app]{ \Gamma \vdash B }
+    \end{prooftree}
+  \end{example}
 \end{csdoc}
 \begin{csdoc}{%
     \opt{left label template=}\meta{code} \\
@@ -489,10 +499,14 @@ For instance, \cs{Infer}\lit{[dashed]} is equivalent to
   The spacing between an inference lines and its labels.
   The default value is \lit{0.5em}.
 \end{csdoc}
+\begin{csdoc}{\opt{label axis=}\meta{dimension}}
+  The height of the horizontal axis used for aligning the labels with the
+  rules. The default value is \lit{0.5ex}.
+\end{csdoc}
 
 
 \subsection{Style macros}
-\label{label:styles}
+\label{sec:styles}
 
 The following commands allow for the definition of custom styles using the
 basic style options, in a way similar to PGF's ``styles'' and \LaTeX3's
