@@ -88,7 +88,7 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
 \ebproofnewrulestyle { double } {
   rule~code = {
     \tex_hrule:D height \l_ebproof_rule_thickness_dim
-    \tex_kern:D \l_ebproof_rule_separation_dim
+    \skip_vertical:N \l_ebproof_rule_separation_dim
     \tex_hrule:D height \l_ebproof_rule_thickness_dim
   }
 }
@@ -97,15 +97,15 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
   rule~code = {
     \hbox_to_wd:nn { \tex_hsize:D } {
       \dim_set:Nn \l_tmpa_dim { \l_ebproof_rule_dash_space_dim / 2 }
-      \tex_kern:D -\l_tmpa_dim
+      \skip_horizontal:n { -\l_tmpa_dim }
       \tex_cleaders:D \hbox:n {
-        \tex_kern:D \l_tmpa_dim
+        \skip_horizontal:N \l_tmpa_dim
         \tex_vrule:D 
           height \l_ebproof_rule_thickness_dim
           width \l_ebproof_rule_dash_length_dim
-        \tex_kern:D \l_tmpa_dim
+        \skip_horizontal:N \l_tmpa_dim
       }\tex_hfill:D
-      \tex_kern:D -\l_tmpa_dim
+      \skip_horizontal:n { -\l_tmpa_dim }
     }
   }
 }
@@ -168,7 +168,9 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
 % Clear a register.
 
 \cs_new:Nn \ebproof_clear:N {
-  \box_clear:N #1
+  \hbox_set:Nn #1 {}
+  % Using \box_clear:N instead would not work because trying to push this box
+  % on the stack would not actually append any box.
   \prop_clear:c { l_ebproof_marks_ \__int_value:w #1 _prop }
   \ebproof_set_mark:Nnn #1 { left } { 0pt }
   \ebproof_set_mark:Nnn #1 { right } { 0pt }
@@ -258,6 +260,7 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
     \dim_set:Nn \tex_hsize:D { \ebproof_mark:Nn #1 {right} }
     #4
   }
+  \box_set_wd:Nn #1 { \ebproof_mark:Nn #1 {right} }
 }
 
 %%% Assembling boxes
@@ -316,7 +319,7 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
   \ebproof_align:NN #1 #2
   \vbox_set:Nn #1 {
     \if_vbox:N #2 \vbox_unpack:N #2 \else: \box_use:N #2 \fi:
-    \tex_hrule:D height 0pt
+    \tex_prevdepth:D -1000pt
     \if_vbox:N #1 \vbox_unpack:N #1 \else: \box_use:N #1 \fi:
   }
 }
@@ -328,7 +331,7 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
   \ebproof_align:NN #1 #2
   \vbox_set_top:Nn #1 {
     \if_vbox:N #1 \vbox_unpack:N #1 \else: \box_use:N #1 \fi:
-    \tex_hrule:D height 0pt
+    \tex_prevdepth:D -1000pt
     \if_vbox:N #2 \vbox_unpack:N #2 \else: \box_use:N #2 \fi:
   }
 }
@@ -372,14 +375,11 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
     { \ebproof_mark:Nn #2 {axis} - \ebproof_mark:Nn #2 {left} }
     { \ebproof_mark:Nn #2 {right} - \ebproof_mark:Nn #2 {left} }
     {
-      \tex_hrule:D width \tex_hsize:D height 0pt
-      \tex_kern:D \l_ebproof_rule_margin_dim
+      \skip_vertical:N \l_ebproof_rule_margin_dim
       \tl_if_empty:NF { \l_ebproof_rule_code_tl } {
         \tl_use:N \l_ebproof_rule_code_tl
-        \tex_unskip:D % so that only one margin is inserted if no rule is drawn
-        \tex_kern:D \l_ebproof_rule_margin_dim
+        \skip_vertical:N \l_ebproof_rule_margin_dim
       }
-      \tex_hrule:D  width \tex_hsize:D height 0pt
     }
   \ebproof_vcenter:N #1
 
@@ -391,7 +391,7 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
         \cs_set_eq:NN \inserttext \l_ebproof_left_label_tl
         \tl_use:N \l_ebproof_left_label_template_tl
       } }
-      \tex_kern:D \l_ebproof_label_separation_dim
+      \skip_horizontal:N \l_ebproof_label_separation_dim
     }
     \box_set_ht:Nn #3 { 0pt }
     \box_set_dp:Nn #3 { 0pt }
@@ -402,7 +402,7 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
 
   \tl_if_blank:VF \l_ebproof_right_label_tl {
     \ebproof_make_simple:Nn #3 {
-      \tex_kern:D \l_ebproof_label_separation_dim
+      \skip_horizontal:N \l_ebproof_label_separation_dim
       \box_move_down:nn { \l_ebproof_label_axis_dim } { \hbox:n {
         \cs_set_eq:NN \inserttext \l_ebproof_right_label_tl
         \tl_use:N \l_ebproof_right_label_template_tl
@@ -591,10 +591,9 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
   \tl_clear:N \l_ebproof_rule_code_tl
   \ebproof_make_split:Nnn \l_ebproof_a_box { } {
     \vbox_set:Nn \l_tmpa_box {
-      \tex_kern:D 1.2ex
+      \skip_vertical:n { 1.2ex }
       \hbox:n { \tex_ignorespaces:D #1 }
-      \tex_hrule:D height 0pt
-      \tex_kern:D 1.2ex
+      \skip_vertical:n { 1.2ex }
     }
     \vbox_to_ht:nn { \box_ht:N \l_tmpa_box } {
       \tex_xleaders:D \vbox_to_ht:nn { .8ex }
