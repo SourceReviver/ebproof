@@ -209,11 +209,6 @@ left of the leftmost conclusion and the right of the rightmost conclusion:
   \end{prooftree}
 \end{example}
 
-\subsection{Additional statements}
-
-The following additional statements may be used to affect the format of the
-last proof tree on the stack:
-
 \begin{csdoc}{\cs{Ellipsis}\marg{label}\marg{text}}
   Typeset vertical dots, with a label on the right, and a new conclusion.
   No inference lines are inserted.
@@ -225,21 +220,48 @@ last proof tree on the stack:
   \end{example}
 \end{csdoc}
 
-\begin{csdoc}{\cs{Alter}\marg{code}}
-  Modify the proof with arbitrary commands, assuming that these commands do
-  not affect the size.
-  The \meta{code} is executed in an \cs{hbox} and is followed by the insertion
-  of the actual box with the current sub-proof.
-  It is mostly useful with \cs{color} commands:
+
+\subsection{Modifying proof trees}
+
+The following additional statements may be used to affect the format of the
+last proof tree on the stack:
+
+\begin{csdoc}{\cs{Rewrite}\marg{code}}
+  Rewrite the proof while preserving its size and alignment. The \meta{code}
+  is typeset in horizontal mode, with the following control sequences defined:
+  \begin{itemize}
+  \item \cs{treebox} is a box register that contains the original material,
+  \item \cs{treemark}\marg{name} expands as the position of a given mark with
+    respect to the left of the box.
+  \end{itemize}
+  A simple use of this statement is to change the color of a proof tree:
   \begin{example}{gobble=4}
     \begin{prooftree}
       \Hypo{ \Gamma, A &\vdash B }
       \Infer1[abs]{ \Gamma &\vdash A\to B }
-      \Alter{\color{red}}
+      \Rewrite{\color{red}\box\treebox}
       \Hypo{ \Gamma \vdash A }
       \Infer2[app]{ \Gamma \vdash B }
     \end{prooftree}
   \end{example}
+  Note the absence of spaces inside the call to \cs{Rewrite}, because spaces
+  would affect the position of the tree box.
+  Note also that explicit use of \cs{treebox} is required to actually draw the
+  subtree.
+  Not using it will effectively not render the subtree, while still reserving
+  its space in the enclosing tree:
+  \begin{example}{gobble=4}
+    \begin{prooftree}
+      \Hypo{ \Gamma, A &\vdash B }
+      \Infer1[abs]{ \Gamma &\vdash A\to B }
+      \Rewrite{}
+      \Hypo{ \Gamma \vdash A }
+      \Infer2[app]{ \Gamma \vdash B }
+    \end{prooftree}
+  \end{example}
+  This kind of manipulation is useful for instance in conjunction with the
+  \package{beamer} package to allow revealing subtrees of a proof tree
+  progressively in successive slides of a given frame.
 \end{csdoc}
 
 \begin{csdoc}{\cs{Delims}\marg{left}\marg{right}}

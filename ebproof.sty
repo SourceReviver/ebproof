@@ -270,7 +270,7 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
 \cs_new:Nn \ebproof_extend_left:Nn {
   \hbox_set:Nn #1 {
     \skip_horizontal:n { #2 }
-    \if_hbox:N #1 \hbox_unpack:N #1 \else: \box_use:N #1 \fi:
+    \box_use:N #1
   }
   \ebproof_shift_x:Nn #1 { #2 }
 }
@@ -279,7 +279,7 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
 
 \cs_new:Nn \ebproof_extend_right:Nn {
   \hbox_set:Nn #1 {
-    \if_hbox:N #1 \hbox_unpack:N #1 \else: \box_use:N #1 \fi:
+    \box_use:N #1
     \skip_horizontal:n { #2 }
   }
 }
@@ -318,9 +318,9 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
 \cs_new:Nn \ebproof_append_above:NN {
   \ebproof_align:NN #1 #2
   \vbox_set:Nn #1 {
-    \if_vbox:N #2 \vbox_unpack:N #2 \else: \box_use:N #2 \fi:
+    \box_use:N #2
     \tex_prevdepth:D -1000pt
-    \if_vbox:N #1 \vbox_unpack:N #1 \else: \box_use:N #1 \fi:
+    \box_use:N #1
   }
 }
 
@@ -330,9 +330,9 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
 \cs_new:Nn \ebproof_append_below:NN {
   \ebproof_align:NN #1 #2
   \vbox_set_top:Nn #1 {
-    \if_vbox:N #1 \vbox_unpack:N #1 \else: \box_use:N #1 \fi:
+    \box_use:N #1
     \tex_prevdepth:D -1000pt
-    \if_vbox:N #2 \vbox_unpack:N #2 \else: \box_use:N #2 \fi:
+    \box_use:N #2
   }
 }
 
@@ -523,44 +523,6 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
   \group_end:
 }
 
-%%% Modifying trees
-
-% Alter a proof with a command that does not affect the size. Typically useful
-% with |\color| commands.
-
-\cs_new:Nn \ebproof_alter:n {
-  \group_begin:
-  \ebproof_pop:N \l_ebproof_a_box
-  \hbox_set:Nn \l_ebproof_a_box {{ #1 \box_use:N \l_ebproof_a_box }}
-  \ebproof_push:N \l_ebproof_a_box
-  \group_end:
-}
-
-% Insert |\left| and |\right| delimiters without changing the alignment
-
-\cs_new:Nn \ebproof_delims:nn {
-  \group_begin:
-  \ebproof_pop:N \l_ebproof_a_box
-  \hbox_set:Nn \l_tmpa_box
-    { $ \tex_vcenter:D { \box_use:N \l_ebproof_a_box } $ }
-  \dim_set:Nn \l_tmpa_dim
-    { \box_ht:N \l_tmpa_box - \box_ht:N \l_ebproof_a_box }
-  \hbox_set:Nn \l_ebproof_a_box {
-    $ #1 \tex_vrule:D
-      height \box_ht:N \l_tmpa_box depth \box_dp:N \l_tmpa_box width 0pt
-    \tex_right:D . $
-  }
-  \ebproof_shift_x:Nn \l_ebproof_a_box { \box_wd:N \l_ebproof_a_box }
-  \hbox_set:Nn \l_ebproof_a_box {
-    \hbox_unpack:N \l_ebproof_a_box
-    $ \tex_left:D . \box_use:N \l_tmpa_box #2 $
-  }
-  \hbox_set:Nn \l_ebproof_a_box
-    { \box_move_down:nn { \l_tmpa_dim } { \box_use:N \l_ebproof_a_box } }
-  \ebproof_push:N \l_ebproof_a_box
-  \group_end:
-}
-
 %%% High-level commands
 
 % Push a box with default formatting, using explicit alignment if the code
@@ -612,6 +574,8 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
 
 %% Document interface
 
+%%% Basic commands
+
 \NewDocumentCommand \ebproofset { m } {
   \keys_set:nn { ebproof } { #1 }
 }
@@ -634,6 +598,60 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
   \group_end:
 }
 
+
+%%% Modifying trees
+
+% Rewrite the box at the top of the stack while preserving its dimensions an
+% marks. The code is typeset in horizontal mode, with control sequences to
+% access the original box and its marks:
+%  - \treebox is a box register with the original material
+%  - \treemark{NAME} provides the value of a given mark
+
+\NewDocumentCommand \ebproofrewrite { m } {
+  \group_begin:
+  \ebproof_pop:N \l_ebproof_a_box
+  \box_set_eq:NN \l_tmpa_box \l_ebproof_a_box
+  \hbox_set:Nn \l_tmpb_box {
+    \cs_set_eq:NN \treebox \l_tmpa_box
+    \cs_set:Npn \treemark { \ebproof_mark:Nn \l_ebproof_a_box }
+    { #1 }
+  }
+  \box_set_wd:Nn \l_tmpb_box { \box_wd:N \l_ebproof_a_box }
+  \box_set_ht:Nn \l_tmpb_box { \box_ht:N \l_ebproof_a_box }
+  \box_set_dp:Nn \l_tmpb_box { \box_dp:N \l_ebproof_a_box }
+  \box_set_eq:NN \l_ebproof_a_box \l_tmpb_box
+  \ebproof_push:N \l_ebproof_a_box
+  \group_end:
+}
+
+% Insert |\left| and |\right| delimiters without changing the alignment
+
+\NewDocumentCommand \ebproofdelims { m m } {
+  \group_begin:
+  \ebproof_pop:N \l_ebproof_a_box
+  \hbox_set:Nn \l_tmpa_box
+    { $ \tex_vcenter:D { \box_use:N \l_ebproof_a_box } $ }
+  \dim_set:Nn \l_tmpa_dim
+    { \box_ht:N \l_tmpa_box - \box_ht:N \l_ebproof_a_box }
+  \hbox_set:Nn \l_ebproof_a_box {
+    $ #1 \tex_vrule:D
+      height \box_ht:N \l_tmpa_box depth \box_dp:N \l_tmpa_box width 0pt
+    \tex_right:D . $
+  }
+  \ebproof_shift_x:Nn \l_ebproof_a_box { \box_wd:N \l_ebproof_a_box }
+  \hbox_set:Nn \l_ebproof_a_box {
+    \hbox_unpack:N \l_ebproof_a_box
+    $ \tex_left:D . \box_use:N \l_tmpa_box #2 $
+  }
+  \hbox_set:Nn \l_ebproof_a_box
+    { \box_move_down:nn { \l_tmpa_dim } { \box_use:N \l_ebproof_a_box } }
+  \ebproof_push:N \l_ebproof_a_box
+  \group_end:
+}
+
+
+%%% Environment interface
+
 \ebproof_clear_stack:
 
 \tl_new:N \l_ebproof_start_level_tl
@@ -646,8 +664,8 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
   \cs_set_eq:NN \Hypo \ebproofhypo
   \cs_set_eq:NN \Infer \ebproofinfer
   \cs_set_eq:NN \Ellipsis \ebproof_ellipsis:nn
-  \cs_set_eq:NN \Alter \ebproof_alter:n
-  \cs_set_eq:NN \Delims \ebproof_delims:nn
+  \cs_set_eq:NN \Rewrite \ebproofrewrite
+  \cs_set_eq:NN \Delims \ebproofdelims
 } {
   \vbox_set_end:
   \ebproof_pop:N \l_ebproof_a_box
