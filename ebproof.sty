@@ -265,38 +265,46 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
 
 %%% Assembling boxes
 
-% Extend a tree to the left by a given length. The marks are shifted.
+% Extend a tree box. The marks are shifted so that alignment is preserved. The
+% arguments are dimensions for the left, top, right and bottom sides
+% respectively.
 
-\cs_new:Nn \ebproof_extend_left:Nn {
-  \hbox_set:Nn #1 {
-    \skip_horizontal:n { #2 }
-    \box_use:N #1
+\cs_new:Nn \ebproof_extend:Nnnnn {
+  \dim_compare:nNnF { #2 } = { 0pt } {
+    \hbox_set:Nn #1 {
+      \skip_horizontal:n { #2 }
+      \box_use:N #1
+    }
+    \ebproof_shift_x:Nn #1 { #2 }
   }
-  \ebproof_shift_x:Nn #1 { #2 }
-}
-
-% Extend a tree to the right by a given length. The marks are preserved.
-
-\cs_new:Nn \ebproof_extend_right:Nn {
-  \hbox_set:Nn #1 {
-    \box_use:N #1
-    \skip_horizontal:n { #2 }
-  }
+  \box_set_ht:Nn #1 { \box_ht:N #1 + #3 }
+  \box_set_wd:Nn #1 { \box_wd:N #1 + #4 }
+  \box_set_dp:Nn #1 { \box_dp:N #1 + #5 }
 }
 
 % Append the contents of the second tree to the first one on the right, with
-% matching baselines. The marks of both trees are preserved.
+% matching baselines. The marks of both trees are preserved. The middle
+% argument specifies the space to insert between boxes.
 
-\cs_new:Nn \ebproof_append_right:NN {
-  \hbox_set:Nn #1 { \box_use:N #1 \box_use:N #2 }
+\cs_new:Nn \ebproof_append_right:NnN {
+  \hbox_set:Nn #1 {
+    \box_use:N #1
+    \dim_compare:nNnF { #2 } = { 0pt } { \skip_horizontal:n { #2 } }
+    \box_use:N #3
+  }
 }
 
 % Append the contents of the second tree to the first one on the left, with
-% matching baselines. The marks of the first tree are shifted accordingly.
+% matching baselines. The marks of the first tree are shifted accordingly. The
+% middle argument specifies the space to insert between boxes.
 
-\cs_new:Nn \ebproof_append_left:NN {
-  \ebproof_shift_x:Nn #1 { \box_wd:N #2 }
-  \hbox_set:Nn #1 { \box_use:N #2 \box_use:N #1 }
+\cs_new:Nn \ebproof_append_left:NnN {
+  \ebproof_shift_x:Nn #1 { \box_wd:N #3 + #2 }
+  \hbox_set:Nn #1 {
+    \box_use:N #3
+    \dim_compare:nNnF { #2 } = { 0pt } { \skip_horizontal:n { #2 } }
+    \box_use:N #1
+  }
 }
 
 % Shift of two trees to the right so that the axes match. The marks of the one
@@ -306,9 +314,9 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
   \dim_set:Nn \l_tmpa_dim
     { \ebproof_mark:Nn #2 {axis} - \ebproof_mark:Nn #1 {axis} }
   \dim_compare:nNnTF \l_tmpa_dim < { 0pt } {
-    \ebproof_extend_left:Nn #2 { -\l_tmpa_dim }
+    \ebproof_extend:Nnnnn #2 { -\l_tmpa_dim } { 0pt } { 0pt } { 0pt }
   } {
-    \ebproof_extend_left:Nn #1 { \l_tmpa_dim }
+    \ebproof_extend:Nnnnn #1 { \l_tmpa_dim } { 0pt } { 0pt } { 0pt }
   }
 }
 
@@ -391,18 +399,17 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
         \cs_set_eq:NN \inserttext \l_ebproof_left_label_tl
         \tl_use:N \l_ebproof_left_label_template_tl
       } }
-      \skip_horizontal:N \l_ebproof_label_separation_dim
     }
     \box_set_ht:Nn #3 { 0pt }
     \box_set_dp:Nn #3 { 0pt }
-    \ebproof_append_left:NN \l_ebproof_c_box \l_ebproof_d_box
+    \ebproof_append_left:NnN
+      \l_ebproof_c_box \l_ebproof_label_separation_dim \l_ebproof_d_box
   }
 
   % Append the right label
 
   \tl_if_blank:VF \l_ebproof_right_label_tl {
     \ebproof_make_simple:Nn #3 {
-      \skip_horizontal:N \l_ebproof_label_separation_dim
       \box_move_down:nn { \l_ebproof_label_axis_dim } { \hbox:n {
         \cs_set_eq:NN \inserttext \l_ebproof_right_label_tl
         \tl_use:N \l_ebproof_right_label_template_tl
@@ -410,7 +417,8 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
     }
     \box_set_ht:Nn #3 { 0pt }
     \box_set_dp:Nn #3 { 0pt }
-    \ebproof_append_right:NN \l_ebproof_c_box \l_ebproof_d_box
+    \ebproof_append_right:NnN
+      \l_ebproof_c_box \l_ebproof_label_separation_dim \l_ebproof_d_box
   }
 
 }
@@ -493,9 +501,9 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
     \group_begin:
     \ebproof_pop:N \l_ebproof_a_box
     \prg_replicate:nn { #1 - 1 } {
-      \ebproof_extend_left:Nn \l_ebproof_a_box { \l_ebproof_separation_dim }
       \ebproof_pop:N \l_ebproof_b_box
-      \ebproof_append_left:NN \l_ebproof_a_box \l_ebproof_b_box
+      \ebproof_append_left:NnN
+        \l_ebproof_a_box \l_ebproof_separation_dim \l_ebproof_b_box
     }
     \ebproof_set_mark:Nnn \l_ebproof_a_box { left }
       { \ebproof_mark:Nn \l_ebproof_b_box { left } }
