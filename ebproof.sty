@@ -537,7 +537,6 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
 % contains a |&| character
 
 \cs_new:Npn \ebproof_statement_parse:w #1&#2&#3\ebproof_statement_stop: {
-  \group_begin:
   \tl_if_empty:nTF { #3 } {
     \ebproof_make_simple:Nn \l_ebproof_a_box
       { \cs_set:Npn \inserttext { #1 } \tl_use:N \l_ebproof_template_tl }
@@ -547,17 +546,97 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
       { \cs_set:Npn \inserttext { #2 } \tl_use:N \l_ebproof_right_template_tl }
   }
   \ebproof_push:N \l_ebproof_a_box
-  \group_end:
 }
 
 \cs_new:Nn \ebproof_push_statement:n {
   \ebproof_statement_parse:w #1&& \ebproof_statement_stop:
 }
 
-% Ellipsis with vertical dots
 
-\cs_new:Nn \ebproof_ellipsis:nn {
+%% Document interface
+
+%%% Functions to define statements
+
+% The |\g_ebproof_stack_seq| variable contains the list of all defined
+% statements. For each statement |X|, there is a document command |\ebproofX|
+% and the alias |\X| is defined when entering a |prooftree| environment.
+
+\seq_new:N \g_ebproof_statements_seq
+
+% Install the aliases for statements, saving the original value of the control
+% sequences.
+
+\cs_new:Nn \ebproof_setup_statements: {
+  \seq_map_inline:Nn \g_ebproof_statements_seq {
+    \cs_set_eq:cc { ebproof_saved_ ##1 } { ##1 }
+    \cs_set_eq:cc { ##1 } { ebproof ##1 }
+  }
+}
+
+% Restore the saved meanings of the control sequences. This is useful when
+% interpreting user-provided code in statement arguments. The meanings are
+% automatically restored when leaving a |prooftree| environment because of
+% grouping.
+
+\cs_new:Nn \ebproof_restore_statements: {
+  \seq_map_inline:Nn \g_ebproof_statements_seq {
+    \cs_set_eq:cc { ##1 } { ebproof_saved_ ##1 }
+  }
+}
+
+% Define a new statement. The first argument is the name, the second one is an
+% argument specifier as used by |xparse| and the third one is the body of the
+% command.
+
+\cs_new:Nn \ebproof_new_statement:nnn {
+  \exp_args:Nc \NewDocumentCommand { ebproof#1 }{ #2 } { #3 }
+  \seq_put_right:Nn \g_ebproof_statements_seq { #1 }
+}
+
+% Define a deprecated statement. The syntax is the same as above except that
+% an extra argument in third position indicates what should be used instead.
+% The effect is the same except that a warning message is issued the first
+% time the statement is used.
+
+\cs_new:Nn \ebproof_new_deprecated_statement:nnnn {
+  \cs_new:cpn { ebproof_#1_warning: } {
+    \PackageWarning { ebproof } { \token_to_str:c{#1}~is~deprecated,~#3 }
+    \cs_gset:cn { ebproof_#1_warning: } { }
+  }
+  \ebproof_new_statement:nnn { #1 } { #2 }
+    { \use:c { ebproof_#1_warning: } #4 }
+}
+
+
+%%% Basic commands
+
+\ebproof_new_statement:nnn { set } { m } {
+  \keys_set:nn { ebproof } { #1 }
+}
+
+\ebproof_new_statement:nnn { hypo } { O{} m } {
   \group_begin:
+  \ebproof_restore_statements:
+  \keys_set:nn { ebproof } { #1 }
+  \ebproof_push_statement:n { #2 }
+  \group_end:
+}
+
+\ebproof_new_statement:nnn { infer } { O{} m O{} m } {
+  \group_begin:
+  \ebproof_restore_statements:
+  \keys_set_known:nnN { ebproof / rule~style } { #1 } \l_tmpa_tl
+  \keys_set:nV { ebproof } \l_tmpa_tl
+  \tl_set:Nn \l_ebproof_right_label_tl { #3 }
+  \ebproof_join_horizontal:n { #2 }
+  \ebproof_push_statement:n { #4 }
+  \ebproof_join_vertical:
+  \group_end:
+}
+
+\ebproof_new_statement:nnn { ellipsis } { m m } {
+  \group_begin:
+  \ebproof_restore_statements:
   \tl_clear:N \l_ebproof_rule_code_tl
   \ebproof_make_split:Nnn \l_ebproof_a_box { } {
     \vbox_set:Nn \l_tmpa_box {
@@ -580,33 +659,6 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
 }
 
 
-%% Document interface
-
-%%% Basic commands
-
-\NewDocumentCommand \ebproofset { m } {
-  \keys_set:nn { ebproof } { #1 }
-}
-
-\NewDocumentCommand \ebproofhypo { O{} m } {
-  \group_begin:
-  \keys_set:nn { ebproof } { #1 }
-  \ebproof_push_statement:n { #2 }
-  \group_end:
-}
-
-\NewDocumentCommand \ebproofinfer { O{} m O{} m } {
-  \group_begin:
-  \keys_set_known:nnN { ebproof / rule~style } { #1 } \l_tmpa_tl
-  \keys_set:nV { ebproof } \l_tmpa_tl
-  \tl_set:Nn \l_ebproof_right_label_tl { #3 }
-  \ebproof_join_horizontal:n { #2 }
-  \ebproof_push_statement:n { #4 }
-  \ebproof_join_vertical:
-  \group_end:
-}
-
-
 %%% Modifying trees
 
 % Rewrite the box at the top of the stack while preserving its dimensions an
@@ -615,8 +667,9 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
 %  - \treebox is a box register with the original material
 %  - \treemark{NAME} provides the value of a given mark
 
-\NewDocumentCommand \ebproofrewrite { m } {
+\ebproof_new_statement:nnn { rewrite } { m } {
   \group_begin:
+  \ebproof_restore_statements:
   \ebproof_pop:N \l_ebproof_a_box
   \box_set_eq:NN \l_tmpa_box \l_ebproof_a_box
   \hbox_set:Nn \l_tmpb_box {
@@ -634,8 +687,9 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
 
 % Insert |\left| and |\right| delimiters without changing the alignment
 
-\NewDocumentCommand \ebproofdelims { m m } {
+\ebproof_new_statement:nnn { delims } { m m } {
   \group_begin:
+  \ebproof_restore_statements:
   \ebproof_pop:N \l_ebproof_a_box
   \hbox_set:Nn \l_tmpa_box
     { $ \tex_vcenter:D { \box_use:N \l_ebproof_a_box } $ }
@@ -658,6 +712,24 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
 }
 
 
+%%% Deprecated statements
+
+% These statements were defined in versions 1.x of the package, they are
+% preserved for temporary upwards compatibility and will be removed in a
+% future version.
+
+\ebproof_new_deprecated_statement:nnnn { Alter } { m }
+  { use~\token_to_str:c{rewrite}~instead } { \ebproofrewrite{ #1 \box\treebox } }
+\ebproof_new_deprecated_statement:nnnn { Delims } { }
+  { use~\token_to_str:c{delims}~instead } { \ebproofdelims }
+\ebproof_new_deprecated_statement:nnnn { Ellipsis } { }
+  { use~\token_to_str:c{ellipsis}~instead } { \ebproofellipsis }
+\ebproof_new_deprecated_statement:nnnn { Hypo } { }
+  { use~\token_to_str:c{hypo}~instead } { \ebproofhypo }
+\ebproof_new_deprecated_statement:nnnn { Infer } { }
+  { use~\token_to_str:c{infer}~instead } { \ebproofinfer }
+
+
 %%% Environment interface
 
 \ebproof_clear_stack:
@@ -669,11 +741,7 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
   \keys_set:nV { ebproof } \l_tmpa_tl
   \tl_set:Nx \l_ebproof_start_level_tl { \int_use:N \g_ebproof_level_int }
   \vbox_set:Nw \l_tmpa_box
-  \cs_set_eq:NN \Hypo \ebproofhypo
-  \cs_set_eq:NN \Infer \ebproofinfer
-  \cs_set_eq:NN \Ellipsis \ebproof_ellipsis:nn
-  \cs_set_eq:NN \Rewrite \ebproofrewrite
-  \cs_set_eq:NN \Delims \ebproofdelims
+  \ebproof_setup_statements:
 } {
   \vbox_set_end:
   \ebproof_pop:N \l_ebproof_a_box
