@@ -100,7 +100,7 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
       \skip_horizontal:n { -\l_tmpa_dim }
       \tex_cleaders:D \hbox:n {
         \skip_horizontal:N \l_tmpa_dim
-        \tex_vrule:D 
+        \tex_vrule:D
           height \l_ebproof_rule_thickness_dim
           width \l_ebproof_rule_dash_length_dim
         \skip_horizontal:N \l_tmpa_dim
@@ -358,7 +358,7 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
 %% Making inferences
 %
 % The following commands use the parameters defined at the beginning of the
-% package for actually building proof trees using the commands defined above. 
+% package for actually building proof trees using the commands defined above.
 
 % Append the contents of the second tree above or below the first one,
 % depending on current settings. Axes are aligned and the marks of the first
@@ -573,7 +573,7 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
     \hbox_overlap_right:n { ~ \box_use:N \l_tmpa_box }
   }
   \ebproof_push:N \l_ebproof_a_box
-  \ebproof_join_vertical: 
+  \ebproof_join_vertical:
   \ebproof_push_statement:n {#2}
   \ebproof_join_vertical:
   \group_end:
