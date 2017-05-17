@@ -1,5 +1,5 @@
 %% ebproof.sty
-%% Copyright 2015 Emmanuel Beffara <manu@beffara.org>
+%% Copyright 2015-2017 Emmanuel Beffara <manu@beffara.org>
 %
 % This work may be distributed and/or modified under the
 % conditions of the LaTeX Project Public License, either version 1.3
@@ -21,7 +21,7 @@
 
 \title{The \package{ebproof} package}
 \author{Emmanuel Beffara \\ \url{manu@beffara.org}}
-\date{Version 1.1 \\ March 13, 2015}
+\date{Version 2.0 \\ March 17, 2017}
 
 \usepackage{amssymb}
 \usepackage{color}
@@ -97,6 +97,9 @@ package, in particular for the postfix notation.
 I actually wrote \package{ebproof} because there were some limitations in
 \package{bussproofs} that I did not know how to lift, and also because I did
 not like some choices in that package (and also because it was fun to write).
+
+Any feedback is welcome, in the form of bug reports, feature requests or
+suggestions, through the web page of the project at \url{https://framagit.org/manu/ebproof}.
 
 \section{Environments}
 
@@ -603,5 +606,35 @@ This work has the LPPL maintenance status `maintained'.
 The Current Maintainer of this work is Emmanuel Beffara.
 
 This work consists of the files \texttt{ebproof.sty} and \texttt{ebproof.tex}.
+
+\section{History}
+
+This section lists the principal evolutions of the package, in reverse
+chronological order.
+\begin{description}
+\item[Version 2.0]
+  A complete rewrite of the code using the \LaTeX3 programming environment. 
+  The incompatible changes from the user's point of view are the following:
+  \begin{itemize}
+  \item Proof statements are now writtten in lowercase ({i.e.} \cs{Infer} is
+    now written \cs{infer} etc.) but the syntax is otherwise unchanged.
+    The old uppercase commands still work but produce a deprecation warning,
+    they will be removed in a future version.
+  \item New styles are now defined using \cs{ebproofnewstyle} and
+    \cs{ebproofnewrulestyle}. The previous method using PGF styles does not
+    work anymore (because PGF is not used anymore).
+  \end{itemize}
+  The new commands and options are the following:
+  \begin{itemize}
+  \item The statement \cs{rewrite} generalizes \cs{Alter},
+  \item The option \opt{label axis} controls vertical alignment of labels.
+  \end{itemize}
+\item[Version 1.1]
+  A bugfix release.
+  In \opt{template} options, one now uses \cs{inserttext} instead of \lit{\#1}
+  for the text arguments, which improves robustness.
+\item[Version 1.0]
+  The first public release.
+\end{description}
 
 \end{document}
