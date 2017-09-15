@@ -536,7 +536,7 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
 % Push a box with default formatting, using explicit alignment if the code
 % contains a |&| character
 
-\cs_new:Npn \ebproof_statement_parse:w #1&#2&#3\ebproof_statement_stop: {
+\cs_new:Npn \ebproof_statement_parse:w #1 & #2 & #3 \q_stop {
   \tl_if_empty:nTF { #3 } {
     \ebproof_make_simple:Nn \l_ebproof_a_box
       { \cs_set:Npn \inserttext { #1 } \tl_use:N \l_ebproof_template_tl }
@@ -549,7 +549,7 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
 }
 
 \cs_new:Nn \ebproof_push_statement:n {
-  \ebproof_statement_parse:w #1&& \ebproof_statement_stop:
+  \ebproof_statement_parse:w #1 & & \q_stop
 }
 
 
@@ -737,6 +737,7 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
 \tl_new:N \l_ebproof_start_level_tl
 
 \NewDocumentEnvironment { prooftree } { s O{} } {
+  \group_align_safe_begin:
   \keys_set_known:nnN { ebproof / proof~style } { #2 } \l_tmpa_tl
   \keys_set:nV { ebproof } \l_tmpa_tl
   \tl_set:Nx \l_ebproof_start_level_tl { \int_use:N \g_ebproof_level_int }
@@ -760,6 +761,7 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
       \box_use:N \l_ebproof_a_box
     }
   }
+  \group_align_safe_end:
 }
 
 % A trick for the starred version:
