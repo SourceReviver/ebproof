@@ -292,6 +292,42 @@
 %   \end{prooftree}
 % \end{example}
 %
+% \begin{function}{\overlay}
+%   \begin{syntax}
+%     \cs{overlay}
+%   \end{syntax}
+%   The statement \cs{overlay} combines the last two proofs on the stack into
+%   a single one, so that their conclusions are placed at the same point.
+% \end{function}
+%
+% \begin{example}
+%   \begin{prooftree}
+%     \hypo{Z}
+%     \hypo{A} \hypo{B} \infer2{C} \hypo{D} \infer2{D}
+%       \rewrite{\color{blue}\box\treebox}
+%     \hypo{E} \hypo{F} \hypo{G} \infer2{H} \infer2{I}
+%       \rewrite{\color{red}\box\treebox}
+%     \overlay \hypo{J} \infer3{K}
+%   \end{prooftree}
+% \end{example}
+%
+% The primary use of this feature is for building animated presentations where
+% a subtree in a proof has to be modified without affecting the general
+% alignment of the surrounding proof. For instance, the example above could be
+% used in Beamer to build successive slides in a given frame with two
+% different subtrees:
+%
+% \begin{verbatim}
+%   \begin{prooftree}
+%     \hypo{Z}
+%     \hypo{A} \hypo{B} \infer2{C} \hypo{D} \infer2{D}
+%       \only<2>{\rewrite{}} % erases this version on slide 2
+%     \hypo{E} \hypo{F} \hypo{G} \infer2{H} \infer2{I}
+%       \only<1>{\rewrite{}} % erases this version on slide 1
+%     \overlay \hypo{J} \infer3{K}
+%   \end{prooftree}
+% \end{verbatim}
+%
 % \section{Options}
 % \label{sec:options}
 %
@@ -1027,6 +1063,25 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
 %    \end{macrocode}
 % \end{macro}
 %
+% \begin{macro}{\ebproof_overlay:NN}
+%   Append the second tree as an overlay over the first one, so that the
+%   baselines and axes match. The bounding box of the result adjusts to
+%   contain both trees.
+%    \begin{macrocode}
+\cs_new:Nn \ebproof_overlay:NN {
+  \ebproof_align:NN #1 #2
+  \hbox_set:Nn #1 {
+    \box_use:N #1
+    \skip_horizontal:n { -\box_wd:N #1 }
+    \box_use:N #2
+    \dim_compare:nNnT { \box_wd:N #2 } < { \box_wd:N #1 } {
+      \skip_horizontal:n { \box_wd:N #1 - \box_wd:N #2 }
+    }
+  }
+}
+%    \end{macrocode}
+% \end{macro}
+%
 % \begin{macro}{\ebproof_vcenter:N}
 %   Shift the material in a tree vertically so that the height and depth are
 %   equal (like \TeX's |\vcenter| but around the baseline).
@@ -1459,6 +1514,22 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
   }
   \hbox_set:Nn \l_ebproof_a_box
     { \box_move_down:nn { \l_tmpa_dim } { \box_use:N \l_ebproof_a_box } }
+  \ebproof_push:N \l_ebproof_a_box
+  \group_end:
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\overlay}
+%   Pop two trees and append the second tree as an overlay over the first one,
+%   so that the baselines and axes match. The bounding box of the result
+%   adjusts to contain both trees.
+%    \begin{macrocode}
+\ebproof_new_statement:nnn { overlay } { } {
+  \group_begin:
+  \ebproof_pop:N \l_ebproof_a_box
+  \ebproof_pop:N \l_ebproof_b_box
+  \ebproof_overlay:NN \l_ebproof_a_box \l_ebproof_b_box
   \ebproof_push:N \l_ebproof_a_box
   \group_end:
 }
