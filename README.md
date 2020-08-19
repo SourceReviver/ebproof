@@ -14,9 +14,9 @@ styles of inference rules, placement of labels, etc.
 
 The distribution includes the following files:
 
-- `ebproof.sty` : the package
-- `ebproof.pdf` : the documentation
-- `ebproof.tex` : the LaTeX source for the documentation
+- `ebproof.dtx` : the doctrip source for the package and documentation
+- `ebproof.pdf` : the compiled documentation
+- `ebproof.sty` : the generated package
 
 The package requires `expl3` (the LaTeX3 programming environment) which
 provides many useful programming tools.
@@ -25,7 +25,7 @@ provides many useful programming tools.
 License
 -------
 
-Copyright 2015-2017 Emmanuel Beffara <manu@beffara.org>
+Copyright 2015-2020 Emmanuel Beffara <manu@beffara.org>
 
 This work may be distributed and/or modified under the
 conditions of the LaTeX Project Public License, either version 1.3
@@ -39,4 +39,4 @@ This work has the LPPL maintenance status “maintained”.
 
 The Current Maintainer of this work is Emmanuel Beffara.
 
-This work consists of the files `ebproof.sty` and `ebproof.tex`.
+This work consists of the file `ebproof.dtx`.
