@@ -704,32 +704,32 @@
 %
 %    \begin{macrocode}
 \keys_define:nn { ebproof } {
-center .bool_set:N = \l_ebproof_center_bool,
+center .bool_set:N = \l_@@_center_bool,
 proof~style .choice: ,
-proof~style / upwards .code:n = \bool_set_false:N \l_ebproof_updown_bool,
-proof~style / downwards .code:n = \bool_set_true:N \l_ebproof_updown_bool,
-separation .dim_set:N = \l_ebproof_separation_dim,
-rule~margin .dim_set:N = \l_ebproof_rule_margin_dim,
-rule~thickness .dim_set:N = \l_ebproof_rule_thickness_dim,
-rule~separation .dim_set:N = \l_ebproof_rule_separation_dim,
-rule~dash~length .dim_set:N = \l_ebproof_rule_dash_length_dim,
-rule~dash~space .dim_set:N = \l_ebproof_rule_dash_space_dim,
-rule~code .tl_set:N = \l_ebproof_rule_code_tl,
+proof~style / upwards .code:n = \bool_set_false:N \l_@@_updown_bool,
+proof~style / downwards .code:n = \bool_set_true:N \l_@@_updown_bool,
+separation .dim_set:N = \l_@@_separation_dim,
+rule~margin .dim_set:N = \l_@@_rule_margin_dim,
+rule~thickness .dim_set:N = \l_@@_rule_thickness_dim,
+rule~separation .dim_set:N = \l_@@_rule_separation_dim,
+rule~dash~length .dim_set:N = \l_@@_rule_dash_length_dim,
+rule~dash~space .dim_set:N = \l_@@_rule_dash_space_dim,
+rule~code .tl_set:N = \l_@@_rule_code_tl,
 rule~style .choice:,
-template .tl_set:N = \l_ebproof_template_tl,
-left~template .tl_set:N = \l_ebproof_left_template_tl,
-right~template .tl_set:N = \l_ebproof_right_template_tl,
-left~label .tl_set:N = \l_ebproof_left_label_tl,
-right~label .tl_set:N = \l_ebproof_right_label_tl,
-left~label~template .tl_set:N = \l_ebproof_left_label_template_tl,
-right~label~template .tl_set:N = \l_ebproof_right_label_template_tl,
-label~separation .dim_set:N = \l_ebproof_label_separation_dim,
-label~axis .dim_set:N = \l_ebproof_label_axis_dim,
+template .tl_set:N = \l_@@_template_tl,
+left~template .tl_set:N = \l_@@_left_template_tl,
+right~template .tl_set:N = \l_@@_right_template_tl,
+left~label .tl_set:N = \l_@@_left_label_tl,
+right~label .tl_set:N = \l_@@_right_label_tl,
+left~label~template .tl_set:N = \l_@@_left_label_template_tl,
+right~label~template .tl_set:N = \l_@@_right_label_template_tl,
+label~separation .dim_set:N = \l_@@_label_separation_dim,
+label~axis .dim_set:N = \l_@@_label_axis_dim,
 }
 %    \end{macrocode}
 %
 % \begin{macro}{\ebproofnewstyle}
-%   We then define the document-level macro |\ebproofnewstyle| and use it to
+%   We then define the document-level macro \cs{ebproofnewstyle} and use it to
 %   define the default styles. This simply consists in defining a meta-key.
 %    \begin{macrocode}
 \NewDocumentCommand \ebproofnewrulestyle { mm } {
@@ -745,16 +745,16 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
 %
 %    \begin{macrocode}
 \ebproofnewrulestyle { simple } {
-  rule~code = { \tex_hrule:D height \l_ebproof_rule_thickness_dim }
+  rule~code = { \tex_hrule:D height \l_@@_rule_thickness_dim }
 }
 \ebproofnewrulestyle { no~rule } {
   rule~code =
 }
 \ebproofnewrulestyle { double } {
   rule~code = {
-    \tex_hrule:D height \l_ebproof_rule_thickness_dim
-    \skip_vertical:N \l_ebproof_rule_separation_dim
-    \tex_hrule:D height \l_ebproof_rule_thickness_dim
+    \tex_hrule:D height \l_@@_rule_thickness_dim
+    \skip_vertical:N \l_@@_rule_separation_dim
+    \tex_hrule:D height \l_@@_rule_thickness_dim
   }
 }
 %    \end{macrocode}
@@ -766,13 +766,13 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
 \ebproofnewrulestyle { dashed } {
   rule~code = {
     \hbox_to_wd:nn { \tex_hsize:D } {
-      \dim_set:Nn \l_tmpa_dim { \l_ebproof_rule_dash_space_dim / 2 }
+      \dim_set:Nn \l_tmpa_dim { \l_@@_rule_dash_space_dim / 2 }
       \skip_horizontal:n { -\l_tmpa_dim }
       \tex_cleaders:D \hbox:n {
         \skip_horizontal:N \l_tmpa_dim
         \tex_vrule:D
-          height \l_ebproof_rule_thickness_dim
-          width \l_ebproof_rule_dash_length_dim
+          height \l_@@_rule_thickness_dim
+          width \l_@@_rule_dash_length_dim
         \skip_horizontal:N \l_tmpa_dim
       } \tex_hfill:D
       \skip_horizontal:n { -\l_tmpa_dim }
@@ -823,7 +823,7 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
 % a register consists in a box register and a property list for marks, which
 % maps mark names to values as explicit dimensions with units.
 %
-% \begin{macro}{\ebproof_new:N}
+% \begin{macro}{\@@_new:N}
 %   Using only public interfaces forces a convoluted approach to allocation:
 %   we use a global counter \cs{g_ebproof_register_int} to number registers,
 %   then each allocation creates registers named \cs{g_ebproof_K_N} where K is
@@ -831,71 +831,73 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
 %   register. The proof box register itself only contains the identifier used
 %   for indirection.
 %    \begin{macrocode}
-\int_new:N \g_ebproof_register_int
-\cs_new:Nn \ebproof_box:N { g_ebproof_box_ \tl_use:N #1 }
-\cs_new:Nn \ebproof_marks:N { g_ebproof_marks_ \tl_use:N #1 }
-\cs_new:Nn \ebproof_new:N {
+\int_new:N \g_@@_register_int
+\cs_new:Nn \@@_box:N { g__ebproof_box_ \tl_use:N #1 }
+\cs_new:Nn \@@_marks:N { g__ebproof_marks_ \tl_use:N #1 }
+\cs_new:Nn \@@_new:N {
   \tl_new:N #1
-  \int_gincr:N \g_ebproof_register_int
-  \tl_gset:Nx #1 { \int_to_arabic:n { \g_ebproof_register_int } }
-  \box_new:c { \ebproof_box:N #1 }
-  \prop_new:c { \ebproof_marks:N #1 }
+  \int_gincr:N \g_@@_register_int
+  \tl_gset:Nx #1 { \int_to_arabic:n { \g_@@_register_int } }
+  \box_new:c { \@@_box:N #1 }
+  \prop_new:c { \@@_marks:N #1 }
 }
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\ebproof_clear:N}
+% \begin{macro}{\@@_clear:N}
 %   The box is cleared by setting it to an empty hbox.
-%   Using |\box_clear:N| instead would not work because trying to push this
+%   Using \cs{box_clear:N} instead would not work because trying to push this
 %   box on the stack would not actually append any box.
 %    \begin{macrocode}
-\cs_new:Nn \ebproof_clear:N {
-  \hbox_set:cn { \ebproof_box:N #1 } {}
-  \prop_clear:c { \ebproof_marks:N #1 }
-  \ebproof_set_mark:Nnn #1 { left } { 0pt }
-  \ebproof_set_mark:Nnn #1 { right } { 0pt }
-  \ebproof_set_mark:Nnn #1 { axis } { 0pt }
+\cs_new:Nn \@@_clear:N {
+  \hbox_set:cn { \@@_box:N #1 } {}
+  \prop_clear:c { \@@_marks:N #1 }
+  \@@_set_mark:Nnn #1 { left } { 0pt }
+  \@@_set_mark:Nnn #1 { right } { 0pt }
+  \@@_set_mark:Nnn #1 { axis } { 0pt }
 }
 %    \end{macrocode}
 % \end{macro}
 %
 % \subsubsection{Mark operations}
 %
-% \begin{macro}{\ebproof_set_mark:Nnn}
+% \begin{macro}{\@@_set_mark:Nnn}
 %   Setting the value of a mark uses a temporary register to evaluate the
 %   dimension expression because values are stored textually in a property
 %   list.
 %    \begin{macrocode}
-\dim_new:N \l_ebproof_transit_dim
-\cs_new:Nn \ebproof_set_mark:Nnn {
-  \dim_set:Nn \l_ebproof_transit_dim { #3 }
-  \prop_put:cnV { \ebproof_marks:N #1 } { #2 }
-    \l_ebproof_transit_dim
+\dim_new:N \l_@@_transit_dim
+\cs_new:Nn \@@_set_mark:Nnn {
+  \dim_set:Nn \l_@@_transit_dim { #3 }
+  \prop_put:cnV { \@@_marks:N #1 } { #2 }
+    \l_@@_transit_dim
 }
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\ebproof_mark:Nn}
+% \begin{macro}{\@@_mark:Nn}
 %   Getting the value of a mark simply consists in getting an item in a
 %   property list.
 %    \begin{macrocode}
-\cs_new:Nn \ebproof_mark:Nn {
-  \prop_item:cn { \ebproof_marks:N #1 } { #2 }
+\cs_new:Nn \@@_mark:Nn {
+  \prop_item:cn { \@@_marks:N #1 } { #2 }
 }
 %    \end{macrocode}
 % \end{macro}
 %
-% The function |\ebproof_shift_x:Nn| shifts the marks by a specified amount,
-% without modifying the box.
+% \begin{macro}{\@@_shift_x:Nn}
+%   This function shifts the marks by a specified amount, without modifying
+%   the box.
 %    \begin{macrocode}
-\cs_new:Nn \ebproof_shift_x:Nn {
-  \prop_map_inline:cn { \ebproof_marks:N #1 } {
-    \ebproof_set_mark:Nnn #1 { ##1 } { ##2 + #2 }
+\cs_new:Nn \@@_shift_x:Nn {
+  \prop_map_inline:cn { \@@_marks:N #1 } {
+    \@@_set_mark:Nnn #1 { ##1 } { ##2 + #2 }
   }
 }
 %    \end{macrocode}
+% \end{macro}
 %
-% \begin{macro}{\ebproof_enlarge_conclusion:NN}
+% \begin{macro}{\@@_enlarge_conclusion:NN}
 %   This function moves the left and right marks of the first tree so that
 %   they are at least as far from the axis as they are in the second tree. 
 %   For instance we get the following:
@@ -914,193 +916,193 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
 %   \end{center}
 %   The contents of the trees are unchanged.
 %    \begin{macrocode}
-\cs_new:Nn \ebproof_enlarge_conclusion:NN {
-  \dim_set:Nn \l_tmpa_dim { \ebproof_mark:Nn #1 {axis}
-    + \ebproof_mark:Nn #2 {left} - \ebproof_mark:Nn #2 {axis} }
-  \dim_compare:nNnT { \l_tmpa_dim } < { \ebproof_mark:Nn #1 {left} } {
-    \ebproof_set_mark:Nnn #1 {left} { \l_tmpa_dim } }
-  \dim_set:Nn \l_tmpa_dim { \ebproof_mark:Nn #1 {axis}
-    + \ebproof_mark:Nn #2 {right} - \ebproof_mark:Nn #2 {axis} }
-  \dim_compare:nNnT { \l_tmpa_dim } > { \ebproof_mark:Nn #1 {right} } {
-    \ebproof_set_mark:Nnn #1 {right} { \l_tmpa_dim } }
+\cs_new:Nn \@@_enlarge_conclusion:NN {
+  \dim_set:Nn \l_tmpa_dim { \@@_mark:Nn #1 {axis}
+    + \@@_mark:Nn #2 {left} - \@@_mark:Nn #2 {axis} }
+  \dim_compare:nNnT { \l_tmpa_dim } < { \@@_mark:Nn #1 {left} } {
+    \@@_set_mark:Nnn #1 {left} { \l_tmpa_dim } }
+  \dim_set:Nn \l_tmpa_dim { \@@_mark:Nn #1 {axis}
+    + \@@_mark:Nn #2 {right} - \@@_mark:Nn #2 {axis} }
+  \dim_compare:nNnT { \l_tmpa_dim } > { \@@_mark:Nn #1 {right} } {
+    \@@_set_mark:Nnn #1 {right} { \l_tmpa_dim } }
 }
 %    \end{macrocode}
 % \end{macro}
 %
 % \subsubsection{Building blocks}
 %
-% \begin{macro}{\ebproof_make_simple:Nn}
+% \begin{macro}{\@@_make_simple:Nn}
 %   Make a tree with explicit material in horizontal mode. Set the left and
 %   right marks to extremal positions and set the axis in the middle.
 %    \begin{macrocode}
-\cs_new:Nn \ebproof_make_simple:Nn {
-  \hbox_set:cn { \ebproof_box:N #1 } { #2 }
-  \ebproof_set_mark:Nnn #1 { left } { 0pt }
-  \ebproof_set_mark:Nnn #1 { axis } { \box_wd:c { \ebproof_box:N #1 } / 2 }
-  \ebproof_set_mark:Nnn #1 { right } { \box_wd:c { \ebproof_box:N #1 } }
+\cs_new:Nn \@@_make_simple:Nn {
+  \hbox_set:cn { \@@_box:N #1 } { #2 }
+  \@@_set_mark:Nnn #1 { left } { 0pt }
+  \@@_set_mark:Nnn #1 { axis } { \box_wd:c { \@@_box:N #1 } / 2 }
+  \@@_set_mark:Nnn #1 { right } { \box_wd:c { \@@_box:N #1 } }
 }
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\ebproof_make_split:Nnn}
+% \begin{macro}{\@@_make_split:Nnn}
 %   Make a tree with explicit material in horizontal mode, split in two parts.
 %   Set the left and right marks to extremal positions and set the axis
 %   between the two parts.
 %    \begin{macrocode}
-\cs_new:Nn \ebproof_make_split:Nnn {
-  \ebproof_set_mark:Nnn #1 { left } { 0pt }
-  \hbox_set:cn { \ebproof_box:N #1 } { #2 }
-  \ebproof_set_mark:Nnn #1 { axis } { \box_wd:c { \ebproof_box:N #1 } }
-  \hbox_set:cn { \ebproof_box:N #1 } { \hbox_unpack:c { \ebproof_box:N #1 } #3 }
-  \ebproof_set_mark:Nnn #1 { right } { \box_wd:c { \ebproof_box:N #1 } }
+\cs_new:Nn \@@_make_split:Nnn {
+  \@@_set_mark:Nnn #1 { left } { 0pt }
+  \hbox_set:cn { \@@_box:N #1 } { #2 }
+  \@@_set_mark:Nnn #1 { axis } { \box_wd:c { \@@_box:N #1 } }
+  \hbox_set:cn { \@@_box:N #1 } { \hbox_unpack:c { \@@_box:N #1 } #3 }
+  \@@_set_mark:Nnn #1 { right } { \box_wd:c { \@@_box:N #1 } }
 }
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\ebproof_make_vertical:Nnnn}
+% \begin{macro}{\@@_make_vertical:Nnnn}
 %   Make a tree with explicit material in vertical mode, using an explicit
 %   width and axis.
 %    \begin{macrocode}
-\cs_new:Nn \ebproof_make_vertical:Nnnn {
-  \ebproof_set_mark:Nnn #1 { left } { 0pt }
-  \ebproof_set_mark:Nnn #1 { axis } { #2 }
-  \ebproof_set_mark:Nnn #1 { right } { #3 }
-  \vbox_set:cn { \ebproof_box:N #1 } {
-    \dim_set:Nn \tex_hsize:D { \ebproof_mark:Nn #1 {right} }
+\cs_new:Nn \@@_make_vertical:Nnnn {
+  \@@_set_mark:Nnn #1 { left } { 0pt }
+  \@@_set_mark:Nnn #1 { axis } { #2 }
+  \@@_set_mark:Nnn #1 { right } { #3 }
+  \vbox_set:cn { \@@_box:N #1 } {
+    \dim_set:Nn \tex_hsize:D { \@@_mark:Nn #1 {right} }
     #4
   }
-  \box_set_wd:cn { \ebproof_box:N #1 } { \ebproof_mark:Nn #1 {right} }
+  \box_set_wd:cn { \@@_box:N #1 } { \@@_mark:Nn #1 {right} }
 }
 %    \end{macrocode}
 % \end{macro}
 %
 % \subsubsection{Assembling boxes}
 %
-% \begin{macro}{\ebproof_extend:Nnnnn}
+% \begin{macro}{\@@_extend:Nnnnn}
 %   Extend a tree box. The marks are shifted so that alignment is preserved.
 %   The arguments are dimensions for the left, top, right and bottom sides
 %   respectively.
 %    \begin{macrocode}
-\cs_new:Nn \ebproof_extend:Nnnnn {
+\cs_new:Nn \@@_extend:Nnnnn {
   \dim_compare:nNnF { #2 } = { 0pt } {
-    \hbox_set:cn { \ebproof_box:N #1 } {
+    \hbox_set:cn { \@@_box:N #1 } {
       \skip_horizontal:n { #2 }
-      \box_use:c { \ebproof_box:N #1 }
+      \box_use:c { \@@_box:N #1 }
     }
-    \ebproof_shift_x:Nn #1 { #2 }
+    \@@_shift_x:Nn #1 { #2 }
   }
-  \box_set_ht:Nn #1 { \box_ht:c { \ebproof_box:N #1 } + #3 }
-  \box_set_wd:Nn #1 { \box_wd:c { \ebproof_box:N #1 } + #4 }
-  \box_set_dp:Nn #1 { \box_dp:c { \ebproof_box:N #1 } + #5 }
+  \box_set_ht:Nn #1 { \box_ht:c { \@@_box:N #1 } + #3 }
+  \box_set_wd:Nn #1 { \box_wd:c { \@@_box:N #1 } + #4 }
+  \box_set_dp:Nn #1 { \box_dp:c { \@@_box:N #1 } + #5 }
 }
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\ebproof_append_right:NnN}
+% \begin{macro}{\@@_append_right:NnN}
 %   Append the contents of the second tree to the first one on the right, with
 %   matching baselines. The marks of both trees are preserved. The middle
 %   argument specifies the space to insert between boxes.
 %    \begin{macrocode}
-\cs_new:Nn \ebproof_append_right:NnN {
-  \hbox_set:cn { \ebproof_box:N #1 } {
-    \box_use:c { \ebproof_box:N #1 }
+\cs_new:Nn \@@_append_right:NnN {
+  \hbox_set:cn { \@@_box:N #1 } {
+    \box_use:c { \@@_box:N #1 }
     \dim_compare:nNnF { #2 } = { 0pt } { \skip_horizontal:n { #2 } }
-    \box_use:c { \ebproof_box:N #3 }
+    \box_use:c { \@@_box:N #3 }
   }
 }
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\ebproof_append_left:NnN}
+% \begin{macro}{\@@_append_left:NnN}
 %   Append the contents of the second tree to the first one on the left, with
 %   matching baselines. The marks of the first tree are shifted accordingly.
 %   The middle argument specifies the space to insert between boxes.
 %    \begin{macrocode}
-\cs_new:Nn \ebproof_append_left:NnN {
-  \ebproof_shift_x:Nn #1 { \box_wd:c { \ebproof_box:N #3 } + #2 }
-  \hbox_set:cn { \ebproof_box:N #1 } {
-    \box_use:c { \ebproof_box:N #3 }
+\cs_new:Nn \@@_append_left:NnN {
+  \@@_shift_x:Nn #1 { \box_wd:c { \@@_box:N #3 } + #2 }
+  \hbox_set:cn { \@@_box:N #1 } {
+    \box_use:c { \@@_box:N #3 }
     \dim_compare:nNnF { #2 } = { 0pt } { \skip_horizontal:n { #2 } }
-    \box_use:c { \ebproof_box:N #1 }
+    \box_use:c { \@@_box:N #1 }
   }
 }
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\ebproof_align:NN}
+% \begin{macro}{\@@_align:NN}
 %   Shift one of two trees to the right so that their axes match. The marks of
 %   the one that is shifted are updated accordingly.
 %    \begin{macrocode}
-\cs_new:Nn \ebproof_align:NN {
+\cs_new:Nn \@@_align:NN {
   \dim_set:Nn \l_tmpa_dim
-    { \ebproof_mark:Nn #2 {axis} - \ebproof_mark:Nn #1 {axis} }
+    { \@@_mark:Nn #2 {axis} - \@@_mark:Nn #1 {axis} }
   \dim_compare:nNnTF \l_tmpa_dim < { 0pt } {
-    \ebproof_extend:Nnnnn #2 { -\l_tmpa_dim } { 0pt } { 0pt } { 0pt }
+    \@@_extend:Nnnnn #2 { -\l_tmpa_dim } { 0pt } { 0pt } { 0pt }
   } {
-    \ebproof_extend:Nnnnn #1 { \l_tmpa_dim } { 0pt } { 0pt } { 0pt }
+    \@@_extend:Nnnnn #1 { \l_tmpa_dim } { 0pt } { 0pt } { 0pt }
   }
 }
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\ebproof_append_above:NN}
+% \begin{macro}{\@@_append_above:NN}
 %   Append the contents of the second tree above the first one, with matching
 %   axes. The marks of the first tree are preserved.
 %    \begin{macrocode}
-\cs_new:Nn \ebproof_append_above:NN {
-  \ebproof_align:NN #1 #2
-  \vbox_set:cn  { \ebproof_box:N #1 } {
-    \box_use:c { \ebproof_box:N #2 }
+\cs_new:Nn \@@_append_above:NN {
+  \@@_align:NN #1 #2
+  \vbox_set:cn  { \@@_box:N #1 } {
+    \box_use:c { \@@_box:N #2 }
     \tex_prevdepth:D -1000pt
-    \box_use:c { \ebproof_box:N #1 }
+    \box_use:c { \@@_box:N #1 }
   }
 }
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\ebproof_append_below:NN}
+% \begin{macro}{\@@_append_below:NN}
 %   Append the contents of the second tree below the first one, with matching
 %   axes. The marks of the first tree are preserved.
 %    \begin{macrocode}
-\cs_new:Nn \ebproof_append_below:NN {
-  \ebproof_align:NN #1 #2
+\cs_new:Nn \@@_append_below:NN {
+  \@@_align:NN #1 #2
   \vbox_set_top:Nn #1 {
-    \box_use:c { \ebproof_box:N #1 }
+    \box_use:c { \@@_box:N #1 }
     \tex_prevdepth:D -1000pt
-    \box_use:c { \ebproof_box:N #2 }
+    \box_use:c { \@@_box:N #2 }
   }
 }
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\ebproof_overlay:NN}
+% \begin{macro}{\@@_overlay:NN}
 %   Append the second tree as an overlay over the first one, so that the
 %   baselines and axes match. The bounding box of the result adjusts to
 %   contain both trees.
 %    \begin{macrocode}
-\cs_new:Nn \ebproof_overlay:NN {
-  \ebproof_align:NN #1 #2
-  \hbox_set:cn { \ebproof_box:N #1 } {
-    \hbox_overlap_right:n { \box_use:c { \ebproof_box:N #1 } }
-    \box_use:c { \ebproof_box:N #2 }
+\cs_new:Nn \@@_overlay:NN {
+  \@@_align:NN #1 #2
+  \hbox_set:cn { \@@_box:N #1 } {
+    \hbox_overlap_right:n { \box_use:c { \@@_box:N #1 } }
+    \box_use:c { \@@_box:N #2 }
     \dim_compare:nNnT
-      { \box_wd:c { \ebproof_box:N #2 } } < { \box_wd:c { \ebproof_box:N #1 } }
+      { \box_wd:c { \@@_box:N #2 } } < { \box_wd:c { \@@_box:N #1 } }
       { \skip_horizontal:n
-        { \box_wd:c { \ebproof_box:N #1 } - \box_wd:c { \ebproof_box:N #2 } } }
+        { \box_wd:c { \@@_box:N #1 } - \box_wd:c { \@@_box:N #2 } } }
   }
 }
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\ebproof_vcenter:N}
+% \begin{macro}{\@@_vcenter:N}
 %   Shift the material in a tree vertically so that the height and depth are
-%   equal (like \TeX's |\vcenter| but around the baseline).
+%   equal (like \TeX's \cs{vcenter} but around the baseline).
 %    \begin{macrocode}
-\cs_new:Nn \ebproof_vcenter:N {
+\cs_new:Nn \@@_vcenter:N {
   \dim_set:Nn \l_tmpa_dim
-    { ( \box_ht:c { \ebproof_box:N #1 } - \box_dp:c { \ebproof_box:N #1 } ) / 2 }
-  \box_set_eq:Nc \l_tmpa_box { \ebproof_box:N #1 }
-  \hbox_set:cn { \ebproof_box:N #1 }
+    { ( \box_ht:c { \@@_box:N #1 } - \box_dp:c { \@@_box:N #1 } ) / 2 }
+  \box_set_eq:Nc \l_tmpa_box { \@@_box:N #1 }
+  \hbox_set:cn { \@@_box:N #1 }
     { \box_move_down:nn { \l_tmpa_dim } { \box_use:N \l_tmpa_box } }
 }
 %    \end{macrocode}
@@ -1111,69 +1113,69 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
 % The following commands use the parameters defined at the beginning of the
 % package for actually building proof trees using the commands defined above.
 %
-% \begin{macro}{\ebproof_append_vertical:NN}
+% \begin{macro}{\@@_append_vertical:NN}
 %   Append the contents of the second tree above or below the first one,
 %   depending on current settings. Axes are aligned and the marks of the first
 %   tree are preserved.
 %    \begin{macrocode}
-\cs_new:Nn \ebproof_append_vertical:NN {
-  \bool_if:NTF \l_ebproof_updown_bool
-    { \ebproof_append_below:NN #1 #2 }
-    { \ebproof_append_above:NN #1 #2 }
+\cs_new:Nn \@@_append_vertical:NN {
+  \bool_if:NTF \l_@@_updown_bool
+    { \@@_append_below:NN #1 #2 }
+    { \@@_append_above:NN #1 #2 }
 }
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\ebproof_make_rule_for:NNN}
+% \begin{macro}{\@@_make_rule_for:NNN}
 %   Make a box containing an inference rule with labels, using the current
 %   settings. The width and axis position are taken as those of the conclusion
 %   of another tree box. The third argument is used as a temporary register
 %   for building labels.
 %    \begin{macrocode}
-\cs_new:Nn \ebproof_make_rule_for:NNN {
+\cs_new:Nn \@@_make_rule_for:NNN {
 %    \end{macrocode}
 %   Build the rule.
 %    \begin{macrocode}
-  \ebproof_make_vertical:Nnnn #1
-    { \ebproof_mark:Nn #2 {axis} - \ebproof_mark:Nn #2 {left} }
-    { \ebproof_mark:Nn #2 {right} - \ebproof_mark:Nn #2 {left} }
+  \@@_make_vertical:Nnnn #1
+    { \@@_mark:Nn #2 {axis} - \@@_mark:Nn #2 {left} }
+    { \@@_mark:Nn #2 {right} - \@@_mark:Nn #2 {left} }
     {
-      \skip_vertical:N \l_ebproof_rule_margin_dim
-      \tl_if_empty:NF { \l_ebproof_rule_code_tl } {
-        \tl_use:N \l_ebproof_rule_code_tl
-        \skip_vertical:N \l_ebproof_rule_margin_dim
+      \skip_vertical:N \l_@@_rule_margin_dim
+      \tl_if_empty:NF { \l_@@_rule_code_tl } {
+        \tl_use:N \l_@@_rule_code_tl
+        \skip_vertical:N \l_@@_rule_margin_dim
       }
     }
-  \ebproof_vcenter:N #1
+  \@@_vcenter:N #1
 %    \end{macrocode}
 %   Append the left label.
 %    \begin{macrocode}
-  \tl_if_blank:VF \l_ebproof_left_label_tl {
-    \ebproof_make_simple:Nn #3 {
-      \box_move_down:nn { \l_ebproof_label_axis_dim } { \hbox:n {
-        \cs_set_eq:NN \inserttext \l_ebproof_left_label_tl
-        \tl_use:N \l_ebproof_left_label_template_tl
+  \tl_if_blank:VF \l_@@_left_label_tl {
+    \@@_make_simple:Nn #3 {
+      \box_move_down:nn { \l_@@_label_axis_dim } { \hbox:n {
+        \cs_set_eq:NN \inserttext \l_@@_left_label_tl
+        \tl_use:N \l_@@_left_label_template_tl
       } }
     }
-    \box_set_ht:cn { \ebproof_box:N #3 } { 0pt }
-    \box_set_dp:cn { \ebproof_box:N #3 } { 0pt }
-    \ebproof_append_left:NnN
-      \l_ebproof_c_box \l_ebproof_label_separation_dim \l_ebproof_d_box
+    \box_set_ht:cn { \@@_box:N #3 } { 0pt }
+    \box_set_dp:cn { \@@_box:N #3 } { 0pt }
+    \@@_append_left:NnN
+      \l_@@_c_box \l_@@_label_separation_dim \l_@@_d_box
   }
 %    \end{macrocode}
 %   Append the right label.
 %    \begin{macrocode}
-  \tl_if_blank:VF \l_ebproof_right_label_tl {
-    \ebproof_make_simple:Nn #3 {
-      \box_move_down:nn { \l_ebproof_label_axis_dim } { \hbox:n {
-        \cs_set_eq:NN \inserttext \l_ebproof_right_label_tl
-        \tl_use:N \l_ebproof_right_label_template_tl
+  \tl_if_blank:VF \l_@@_right_label_tl {
+    \@@_make_simple:Nn #3 {
+      \box_move_down:nn { \l_@@_label_axis_dim } { \hbox:n {
+        \cs_set_eq:NN \inserttext \l_@@_right_label_tl
+        \tl_use:N \l_@@_right_label_template_tl
       } }
     }
-    \box_set_ht:cn { \ebproof_box:N #3 } { 0pt }
-    \box_set_dp:cn { \ebproof_box:N #3 } { 0pt }
-    \ebproof_append_right:NnN
-      \l_ebproof_c_box \l_ebproof_label_separation_dim \l_ebproof_d_box
+    \box_set_ht:cn { \@@_box:N #3 } { 0pt }
+    \box_set_dp:cn { \@@_box:N #3 } { 0pt }
+    \@@_append_right:NnN
+      \l_@@_c_box \l_@@_label_separation_dim \l_@@_d_box
   }
 }
 %    \end{macrocode}
@@ -1186,57 +1188,57 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
 % Logically, box structures are stored on a stack. However, \TeX\ does not
 % provide data structures for that and the grouping mechanism is not flexible
 % enough, so we encode them using what we actually have. A stack for boxes is
-% implemented using a global hbox |\g_ebproof_stack_box| that contains all the
-% boxes successively. A sequence |\g_ebproof_stack_seq| is used to store the
+% implemented using a global hbox \cs{g_@@_stack_box} that contains all the
+% boxes successively. A sequence \cs{g_@@_stack_seq} is used to store the
 % dimensions property lists textually. We maintain a counter
-% |\g_ebproof_level_int| with the number of elements on the stack, for
+% \cs{g_@@_level_int} with the number of elements on the stack, for
 % consistency checks.
 %    \begin{macrocode}
-\int_new:N \g_ebproof_level_int
-\box_new:N \g_ebproof_stack_box
-\seq_new:N \g_ebproof_stack_seq
+\int_new:N \g_@@_level_int
+\box_new:N \g_@@_stack_box
+\seq_new:N \g_@@_stack_seq
 %    \end{macrocode}
 %
-% \begin{macro}{\ebproof_clear_stack:}
+% \begin{macro}{\@@_clear_stack:}
 %   Clear the stack.
 %    \begin{macrocode}
-\cs_new:Nn \ebproof_clear_stack: {
-  \int_gset:Nn \g_ebproof_level_int { 0 }
-  \hbox_gset:Nn \g_ebproof_stack_box { }
-  \seq_gclear:N \g_ebproof_stack_seq
+\cs_new:Nn \@@_clear_stack: {
+  \int_gset:Nn \g_@@_level_int { 0 }
+  \hbox_gset:Nn \g_@@_stack_box { }
+  \seq_gclear:N \g_@@_stack_seq
 }
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\ebproof_push:N}
+% \begin{macro}{\@@_push:N}
 %   Push the contents of a register on the stack.
 %    \begin{macrocode}
-\cs_new:Nn \ebproof_push:N {
-  \int_gincr:N \g_ebproof_level_int
-  \hbox_gset:Nn \g_ebproof_stack_box
-    { \hbox_unpack:N \g_ebproof_stack_box \box_use:c { \ebproof_box:N #1 } }
-  \seq_gput_left:Nv \g_ebproof_stack_seq
-    { \ebproof_marks:N #1 }
+\cs_new:Nn \@@_push:N {
+  \int_gincr:N \g_@@_level_int
+  \hbox_gset:Nn \g_@@_stack_box
+    { \hbox_unpack:N \g_@@_stack_box \box_use:c { \@@_box:N #1 } }
+  \seq_gput_left:Nv \g_@@_stack_seq
+    { \@@_marks:N #1 }
 }
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\ebproof_pop:N}
+% \begin{macro}{\@@_pop:N}
 %   Pop the value from the top of the stack into a register.
 %    \begin{macrocode}
-\cs_new:Nn \ebproof_pop:N {
-  \int_compare:nNnTF { \g_ebproof_level_int } > { 0 } {
-    \int_gdecr:N \g_ebproof_level_int
-    \hbox_gset:Nn \g_ebproof_stack_box {
-      \hbox_unpack:N \g_ebproof_stack_box
+\cs_new:Nn \@@_pop:N {
+  \int_compare:nNnTF { \g_@@_level_int } > { 0 } {
+    \int_gdecr:N \g_@@_level_int
+    \hbox_gset:Nn \g_@@_stack_box {
+      \hbox_unpack:N \g_@@_stack_box
       \box_gset_to_last:N \g_tmpa_box
     }
-    \box_set_eq_clear:cN { \ebproof_box:N #1 } \g_tmpa_box
-    \seq_gpop_left:NN \g_ebproof_stack_seq \l_tmpa_tl
-    \tl_set_eq:cN { \ebproof_marks:N #1 } \l_tmpa_tl
+    \box_set_eq_clear:cN { \@@_box:N #1 } \g_tmpa_box
+    \seq_gpop_left:NN \g_@@_stack_seq \l_tmpa_tl
+    \tl_set_eq:cN { \@@_marks:N #1 } \l_tmpa_tl
   } {
     \PackageError{ebproof}{Missing~premiss~in~a~proof~tree}{}
-    \ebproof_clear:N #1
+    \@@_clear:N #1
   }
 }
 %    \end{macrocode}
@@ -1245,60 +1247,60 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
 % \subsubsection{Assembling trees}
 %
 %    \begin{macrocode}
-\ebproof_new:N \l_ebproof_a_box
-\ebproof_new:N \l_ebproof_b_box
-\ebproof_new:N \l_ebproof_c_box
-\ebproof_new:N \l_ebproof_d_box
+\@@_new:N \l_@@_a_box
+\@@_new:N \l_@@_b_box
+\@@_new:N \l_@@_c_box
+\@@_new:N \l_@@_d_box
 %    \end{macrocode}
 %
-% \begin{macro}{\ebproof_join_horizontal:n}
+% \begin{macro}{\@@_join_horizontal:n}
 %   Join horizontally a number of elements at the top of the stack. If several
 %   trees are joined, use the left mark of the left tree, the right mark of
 %   the right tree and set the axis in the middle of these marks.
 %    \begin{macrocode}
-\cs_new:Nn \ebproof_join_horizontal:n {
+\cs_new:Nn \@@_join_horizontal:n {
   \int_case:nnF { #1 } {
   { 0 } {
     \group_begin:
-    \ebproof_clear:N \l_ebproof_a_box
-    \ebproof_push:N \l_ebproof_a_box
+    \@@_clear:N \l_@@_a_box
+    \@@_push:N \l_@@_a_box
     \group_end:
   }
   { 1 } { }
   } {
     \group_begin:
-    \ebproof_pop:N \l_ebproof_a_box
+    \@@_pop:N \l_@@_a_box
     \prg_replicate:nn { #1 - 1 } {
-      \ebproof_pop:N \l_ebproof_b_box
-      \ebproof_append_left:NnN
-        \l_ebproof_a_box \l_ebproof_separation_dim \l_ebproof_b_box
+      \@@_pop:N \l_@@_b_box
+      \@@_append_left:NnN
+        \l_@@_a_box \l_@@_separation_dim \l_@@_b_box
     }
-    \ebproof_set_mark:Nnn \l_ebproof_a_box { left }
-      { \ebproof_mark:Nn \l_ebproof_b_box { left } }
-    \ebproof_set_mark:Nnn \l_ebproof_a_box { axis }
-      { ( \ebproof_mark:Nn \l_ebproof_a_box { left }
-        + \ebproof_mark:Nn \l_ebproof_a_box { right } ) / 2 }
-    \ebproof_push:N \l_ebproof_a_box
+    \@@_set_mark:Nnn \l_@@_a_box { left }
+      { \@@_mark:Nn \l_@@_b_box { left } }
+    \@@_set_mark:Nnn \l_@@_a_box { axis }
+      { ( \@@_mark:Nn \l_@@_a_box { left }
+        + \@@_mark:Nn \l_@@_a_box { right } ) / 2 }
+    \@@_push:N \l_@@_a_box
     \group_end:
   }
 }
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\ebproof_join_vertical:}
+% \begin{macro}{\@@_join_vertical:}
 %   Join vertically the two elements at the top of the stack, with a
 %   horizontal rule of the appropriate size.
 %    \begin{macrocode}
-\cs_new:Nn \ebproof_join_vertical: {
+\cs_new:Nn \@@_join_vertical: {
   \group_begin:
-  \ebproof_pop:N \l_ebproof_a_box
-  \ebproof_pop:N \l_ebproof_b_box
-  \ebproof_enlarge_conclusion:NN \l_ebproof_b_box \l_ebproof_a_box
-  \ebproof_make_rule_for:NNN \l_ebproof_c_box \l_ebproof_b_box
-    \l_ebproof_d_box
-  \ebproof_append_vertical:NN \l_ebproof_a_box \l_ebproof_c_box
-  \ebproof_append_vertical:NN \l_ebproof_a_box \l_ebproof_b_box
-  \ebproof_push:N \l_ebproof_a_box
+  \@@_pop:N \l_@@_a_box
+  \@@_pop:N \l_@@_b_box
+  \@@_enlarge_conclusion:NN \l_@@_b_box \l_@@_a_box
+  \@@_make_rule_for:NNN \l_@@_c_box \l_@@_b_box
+    \l_@@_d_box
+  \@@_append_vertical:NN \l_@@_a_box \l_@@_c_box
+  \@@_append_vertical:NN \l_@@_a_box \l_@@_b_box
+  \@@_push:N \l_@@_a_box
   \group_end:
 }
 %    \end{macrocode}
@@ -1306,30 +1308,30 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
 %
 % \subsubsection{High-level commands}
 %
-% \begin{macro}{\ebproof_statement_parse:w}
+% \begin{macro}{\@@_statement_parse:w}
 %   An auxiliary function for parsing the argument in
-%   |\ebproof_push_statement:n|.
+%   \cs{@@_push_statement:n}.
 %    \begin{macrocode}
-\cs_new:Npn \ebproof_statement_parse:w #1 & #2 & #3 \q_stop {
+\cs_new:Npn \@@_statement_parse:w #1 & #2 & #3 \q_stop {
   \tl_if_empty:nTF { #3 } {
-    \ebproof_make_simple:Nn \l_ebproof_a_box
-      { \cs_set:Npn \inserttext { #1 } \tl_use:N \l_ebproof_template_tl }
+    \@@_make_simple:Nn \l_@@_a_box
+      { \cs_set:Npn \inserttext { #1 } \tl_use:N \l_@@_template_tl }
   } {
-    \ebproof_make_split:Nnn \l_ebproof_a_box
-      { \cs_set:Npn \inserttext { #1 } \tl_use:N \l_ebproof_left_template_tl }
-      { \cs_set:Npn \inserttext { #2 } \tl_use:N \l_ebproof_right_template_tl }
+    \@@_make_split:Nnn \l_@@_a_box
+      { \cs_set:Npn \inserttext { #1 } \tl_use:N \l_@@_left_template_tl }
+      { \cs_set:Npn \inserttext { #2 } \tl_use:N \l_@@_right_template_tl }
   }
-  \ebproof_push:N \l_ebproof_a_box
+  \@@_push:N \l_@@_a_box
 }
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\ebproof_push_statement:n}
+% \begin{macro}{\@@_push_statement:n}
 %   Push a box with default formatting, using explicit alignment if the code
 %   contains a |&| character
 %    \begin{macrocode}
-\cs_new:Nn \ebproof_push_statement:n {
-  \ebproof_statement_parse:w #1 & & \q_stop
+\cs_new:Nn \@@_push_statement:n {
+  \@@_statement_parse:w #1 & & \q_stop
 }
 %    \end{macrocode}
 % \end{macro}
@@ -1338,19 +1340,19 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
 %
 % \subsubsection{Functions to define statements}
 %
-% The |\g_ebproof_statements_seq| variable contains the list of all defined
-% statements. For each statement |X|, there is a document command |\ebproofX|
-% and the alias |\X| is defined when entering a |prooftree| environment.
+% The \cs{g_@@_statements_seq} variable contains the list of all defined
+% statements. For each statement |X|, there is a document command \cs{ebproofX}
+% and the alias \cs{X} is defined when entering a |prooftree| environment.
 %    \begin{macrocode}
-\seq_new:N \g_ebproof_statements_seq
+\seq_new:N \g_@@_statements_seq
 %    \end{macrocode}
 %
-% \begin{macro}{\ebproof_setup_statements:}
+% \begin{macro}{\@@_setup_statements:}
 %   Install the aliases for statements, saving the original value of the control
 %   sequences.
 %    \begin{macrocode}
-\cs_new:Nn \ebproof_setup_statements: {
-  \seq_map_inline:Nn \g_ebproof_statements_seq {
+\cs_new:Nn \@@_setup_statements: {
+  \seq_map_inline:Nn \g_@@_statements_seq {
     \cs_set_eq:cc { ebproof_saved_ ##1 } { ##1 }
     \cs_set_eq:cc { ##1 } { ebproof ##1 }
   }
@@ -1358,44 +1360,44 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\ebproof_restore_statements:}
+% \begin{macro}{\@@_restore_statements:}
 %   Restore the saved meanings of the control sequences. This is useful when
 %   interpreting user-provided code in statement arguments. The meanings are
 %   automatically restored when leaving a |prooftree| environment because of
 %   grouping.
 %    \begin{macrocode}
-\cs_new:Nn \ebproof_restore_statements: {
-  \seq_map_inline:Nn \g_ebproof_statements_seq {
+\cs_new:Nn \@@_restore_statements: {
+  \seq_map_inline:Nn \g_@@_statements_seq {
     \cs_set_eq:cc { ##1 } { ebproof_saved_ ##1 }
   }
 }
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\ebproof_new_statement:nnn}
+% \begin{macro}{\@@_new_statement:nnn}
 %   Define a new statement. The first argument is the name, the second one is
 %   an argument specifier as used by |xparse| and the third one is the body of
 %   the command.
 %    \begin{macrocode}
-\cs_new:Nn \ebproof_new_statement:nnn {
+\cs_new:Nn \@@_new_statement:nnn {
   \exp_args:Nc \NewDocumentCommand { ebproof#1 }{ #2 } { #3 }
-  \seq_put_right:Nn \g_ebproof_statements_seq { #1 }
+  \seq_put_right:Nn \g_@@_statements_seq { #1 }
 }
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\ebproof_new_deprecated_statement:nnnn}
+% \begin{macro}{\@@_new_deprecated_statement:nnnn}
 %   Define a deprecated statement. The syntax is the same as above except that
 %   an extra argument in third position indicates what should be used instead.
 %   The effect is the same except that a warning message is issued the first
 %   time the statement is used.
 %    \begin{macrocode}
-\cs_new:Nn \ebproof_new_deprecated_statement:nnnn {
+\cs_new:Nn \@@_new_deprecated_statement:nnnn {
   \cs_new:cpn { ebproof_#1_warning: } {
     \PackageWarning { ebproof } { \token_to_str:c{#1}~is~deprecated,~#3 }
     \cs_gset:cn { ebproof_#1_warning: } { }
   }
-  \ebproof_new_statement:nnn { #1 } { #2 }
+  \@@_new_statement:nnn { #1 } { #2 }
     { \use:c { ebproof_#1_warning: } #4 }
 }
 %    \end{macrocode}
@@ -1407,7 +1409,7 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
 % \begin{macro}{\ebproofset,\set}
 %   This is a simple wrapper around \cs{keys_set:nn}.
 %    \begin{macrocode}
-\ebproof_new_statement:nnn { set } { m } {
+\@@_new_statement:nnn { set } { m } {
   \keys_set:nn { ebproof } { #1 }
 }
 %    \end{macrocode}
@@ -1417,11 +1419,11 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
 %   This is mostly a wrapper around \cs{ebproof_push_statement:n}, with
 %   material to handle options and the statements macros.
 %    \begin{macrocode}
-\ebproof_new_statement:nnn { hypo } { O{} m } {
+\@@_new_statement:nnn { hypo } { O{} m } {
   \group_begin:
-  \ebproof_restore_statements:
+  \@@_restore_statements:
   \keys_set:nn { ebproof } { #1 }
-  \ebproof_push_statement:n { #2 }
+  \@@_push_statement:n { #2 }
   \group_end:
 }
 %    \end{macrocode}
@@ -1431,15 +1433,15 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
 %   This is a bit more involved than \cs{hypo} because we have to handle rule
 %   style options and joining.
 %    \begin{macrocode}
-\ebproof_new_statement:nnn { infer } { O{} m O{} m } {
+\@@_new_statement:nnn { infer } { O{} m O{} m } {
   \group_begin:
-  \ebproof_restore_statements:
+  \@@_restore_statements:
   \keys_set_known:nnN { ebproof / rule~style } { #1 } \l_tmpa_tl
   \keys_set:nV { ebproof } \l_tmpa_tl
-  \tl_set:Nn \l_ebproof_right_label_tl { #3 }
-  \ebproof_join_horizontal:n { #2 }
-  \ebproof_push_statement:n { #4 }
-  \ebproof_join_vertical:
+  \tl_set:Nn \l_@@_right_label_tl { #3 }
+  \@@_join_horizontal:n { #2 }
+  \@@_push_statement:n { #4 }
+  \@@_join_vertical:
   \group_end:
 }
 %    \end{macrocode}
@@ -1449,11 +1451,11 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
 %   An ellipsis is made by hand using vertical leaders to render the dots
 %   after rendering the label.
 %    \begin{macrocode}
-\ebproof_new_statement:nnn { ellipsis } { m m } {
+\@@_new_statement:nnn { ellipsis } { m m } {
   \group_begin:
-  \ebproof_restore_statements:
-  \tl_clear:N \l_ebproof_rule_code_tl
-  \ebproof_make_split:Nnn \l_ebproof_a_box { } {
+  \@@_restore_statements:
+  \tl_clear:N \l_@@_rule_code_tl
+  \@@_make_split:Nnn \l_@@_a_box { } {
     \vbox_set:Nn \l_tmpa_box {
       \skip_vertical:n { 1.2ex }
       \hbox:n { \tex_ignorespaces:D #1 }
@@ -1466,10 +1468,10 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
     }
     \hbox_overlap_right:n { ~ \box_use:N \l_tmpa_box }
   }
-  \ebproof_push:N \l_ebproof_a_box
-  \ebproof_join_vertical:
-  \ebproof_push_statement:n {#2}
-  \ebproof_join_vertical:
+  \@@_push:N \l_@@_a_box
+  \@@_join_vertical:
+  \@@_push_statement:n {#2}
+  \@@_join_vertical:
   \group_end:
 }
 %    \end{macrocode}
@@ -1482,52 +1484,52 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
 %   marks. The code is typeset in horizontal mode, with control sequences to
 %   access the original box and its marks.
 %    \begin{macrocode}
-\ebproof_new_statement:nnn { rewrite } { m } {
+\@@_new_statement:nnn { rewrite } { m } {
   \group_begin:
-  \ebproof_restore_statements:
-  \ebproof_pop:N \l_ebproof_a_box
-  \box_set_eq:Nc \l_tmpa_box { \ebproof_box:N \l_ebproof_a_box }
+  \@@_restore_statements:
+  \@@_pop:N \l_@@_a_box
+  \box_set_eq:Nc \l_tmpa_box { \@@_box:N \l_@@_a_box }
   \hbox_set:Nn \l_tmpb_box {
     \cs_set_eq:NN \treebox \l_tmpa_box
-    \cs_set:Npn \treemark { \ebproof_mark:Nn \l_ebproof_a_box }
+    \cs_set:Npn \treemark { \@@_mark:Nn \l_@@_a_box }
     { #1 }
   }
-  \box_set_wd:Nn \l_tmpb_box { \box_wd:c { \ebproof_box:N \l_ebproof_a_box } }
-  \box_set_ht:Nn \l_tmpb_box { \box_ht:c { \ebproof_box:N \l_ebproof_a_box } }
-  \box_set_dp:Nn \l_tmpb_box { \box_dp:c { \ebproof_box:N \l_ebproof_a_box } }
-  \box_set_eq:cN { \ebproof_box:N \l_ebproof_a_box } \l_tmpb_box
-  \ebproof_push:N \l_ebproof_a_box
+  \box_set_wd:Nn \l_tmpb_box { \box_wd:c { \@@_box:N \l_@@_a_box } }
+  \box_set_ht:Nn \l_tmpb_box { \box_ht:c { \@@_box:N \l_@@_a_box } }
+  \box_set_dp:Nn \l_tmpb_box { \box_dp:c { \@@_box:N \l_@@_a_box } }
+  \box_set_eq:cN { \@@_box:N \l_@@_a_box } \l_tmpb_box
+  \@@_push:N \l_@@_a_box
   \group_end:
 }
 %    \end{macrocode}
 % \end{macro}
 %
 % \begin{macro}{\delims}
-%   Insert |\left| and |\right| delimiters without changing the alignment.
+%   Insert \cs{left} and \cs{right} delimiters without changing the alignment.
 %    \begin{macrocode}
-\ebproof_new_statement:nnn { delims } { m m } {
+\@@_new_statement:nnn { delims } { m m } {
   \group_begin:
-  \ebproof_restore_statements:
-  \ebproof_pop:N \l_ebproof_a_box
+  \@@_restore_statements:
+  \@@_pop:N \l_@@_a_box
   \hbox_set:Nn \l_tmpa_box
-    { $ \tex_vcenter:D { \box_use:c { \ebproof_box:N \l_ebproof_a_box } } $ }
+    { $ \tex_vcenter:D { \box_use:c { \@@_box:N \l_@@_a_box } } $ }
   \dim_set:Nn \l_tmpa_dim
-    { \box_ht:N \l_tmpa_box - \box_ht:c { \ebproof_box:N \l_ebproof_a_box } }
-  \hbox_set:cn { \ebproof_box:N \l_ebproof_a_box } {
+    { \box_ht:N \l_tmpa_box - \box_ht:c { \@@_box:N \l_@@_a_box } }
+  \hbox_set:cn { \@@_box:N \l_@@_a_box } {
     $ #1 \tex_vrule:D
       height \box_ht:N \l_tmpa_box depth \box_dp:N \l_tmpa_box width 0pt
     \tex_right:D . $
   }
-  \ebproof_shift_x:Nn \l_ebproof_a_box
-    { \box_wd:c { \ebproof_box:N \l_ebproof_a_box } }
-  \hbox_set:cn { \ebproof_box:N \l_ebproof_a_box } {
-    \hbox_unpack:c { \ebproof_box:N \l_ebproof_a_box }
+  \@@_shift_x:Nn \l_@@_a_box
+    { \box_wd:c { \@@_box:N \l_@@_a_box } }
+  \hbox_set:cn { \@@_box:N \l_@@_a_box } {
+    \hbox_unpack:c { \@@_box:N \l_@@_a_box }
     $ \tex_left:D . \box_use:N \l_tmpa_box #2 $
   }
-  \hbox_set:cn { \ebproof_box:N \l_ebproof_a_box }
+  \hbox_set:cn { \@@_box:N \l_@@_a_box }
     { \box_move_down:nn { \l_tmpa_dim }
-        { \box_use:c { \ebproof_box:N \l_ebproof_a_box } } }
-  \ebproof_push:N \l_ebproof_a_box
+        { \box_use:c { \@@_box:N \l_@@_a_box } } }
+  \@@_push:N \l_@@_a_box
   \group_end:
 }
 %    \end{macrocode}
@@ -1538,12 +1540,12 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
 %   so that the baselines and axes match. The bounding box of the result
 %   adjusts to contain both trees.
 %    \begin{macrocode}
-\ebproof_new_statement:nnn { overlay } { } {
+\@@_new_statement:nnn { overlay } { } {
   \group_begin:
-  \ebproof_pop:N \l_ebproof_a_box
-  \ebproof_pop:N \l_ebproof_b_box
-  \ebproof_overlay:NN \l_ebproof_a_box \l_ebproof_b_box
-  \ebproof_push:N \l_ebproof_a_box
+  \@@_pop:N \l_@@_a_box
+  \@@_pop:N \l_@@_b_box
+  \@@_overlay:NN \l_@@_a_box \l_@@_b_box
+  \@@_push:N \l_@@_a_box
   \group_end:
 }
 %    \end{macrocode}
@@ -1555,15 +1557,15 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
 % preserved for temporary upwards compatibility and will be removed in a
 % future version.
 %    \begin{macrocode}
-\ebproof_new_deprecated_statement:nnnn { Alter } { m }
+\@@_new_deprecated_statement:nnnn { Alter } { m }
   { use~\token_to_str:c{rewrite}~instead } { \ebproofrewrite{ #1 \box\treebox } }
-\ebproof_new_deprecated_statement:nnnn { Delims } { }
+\@@_new_deprecated_statement:nnnn { Delims } { }
   { use~\token_to_str:c{delims}~instead } { \ebproofdelims }
-\ebproof_new_deprecated_statement:nnnn { Ellipsis } { }
+\@@_new_deprecated_statement:nnnn { Ellipsis } { }
   { use~\token_to_str:c{ellipsis}~instead } { \ebproofellipsis }
-\ebproof_new_deprecated_statement:nnnn { Hypo } { }
+\@@_new_deprecated_statement:nnnn { Hypo } { }
   { use~\token_to_str:c{hypo}~instead } { \ebproofhypo }
-\ebproof_new_deprecated_statement:nnnn { Infer } { }
+\@@_new_deprecated_statement:nnnn { Infer } { }
   { use~\token_to_str:c{infer}~instead } { \ebproofinfer }
 %    \end{macrocode}
 %
@@ -1576,8 +1578,8 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
 % environment, if it ever happens to be useful.
 %
 %    \begin{macrocode}
-\ebproof_clear_stack:
-\tl_new:N \l_ebproof_start_level_tl
+\@@_clear_stack:
+\tl_new:N \l_@@_start_level_tl
 %    \end{macrocode}
 %
 % \begin{macro}{prooftree,prooftree*}
@@ -1587,25 +1589,25 @@ label~axis .dim_set:N = \l_ebproof_label_axis_dim,
   \group_align_safe_begin:
   \keys_set_known:nnN { ebproof / proof~style } { #2 } \l_tmpa_tl
   \keys_set:nV { ebproof } \l_tmpa_tl
-  \tl_set:Nx \l_ebproof_start_level_tl { \int_use:N \g_ebproof_level_int }
+  \tl_set:Nx \l_@@_start_level_tl { \int_use:N \g_@@_level_int }
   \vbox_set:Nw \l_tmpa_box
-  \ebproof_setup_statements:
+  \@@_setup_statements:
 } {
   \vbox_set_end:
-  \ebproof_pop:N \l_ebproof_a_box
-  \int_compare:nNnF { \g_ebproof_level_int } = { \tl_use:N \l_ebproof_start_level_tl } {
+  \@@_pop:N \l_@@_a_box
+  \int_compare:nNnF { \g_@@_level_int } = { \tl_use:N \l_@@_start_level_tl } {
     \PackageError{ebproof}{Malformed~proof~tree}{
       Some~hypotheses~were~declared~but~not~used~in~this~tree.}
   }
   \IfBooleanTF { #1 } {
-    \[ \box_use:c { \ebproof_box:N \l_ebproof_a_box } \]
+    \[ \box_use:c { \@@_box:N \l_@@_a_box } \]
     \ignorespacesafterend
   } {
     \hbox_unpack:N \c_empty_box
-    \bool_if:NTF \l_ebproof_center_bool {
-      \hbox:n { $ \tex_vcenter:D { \box_use:c { \ebproof_box:N \l_ebproof_a_box } } $ }
+    \bool_if:NTF \l_@@_center_bool {
+      \hbox:n { $ \tex_vcenter:D { \box_use:c { \@@_box:N \l_@@_a_box } } $ }
     } {
-      \box_use:c { \ebproof_box:N \l_ebproof_a_box }
+      \box_use:c { \@@_box:N \l_@@_a_box }
     }
   }
   \group_align_safe_end:
