@@ -15,8 +15,8 @@ styles of inference rules, placement of labels, etc.
 The distribution includes the following files:
 
 - `ebproof.dtx` : the doctrip source for the package and documentation
+- `ebproof.ins` : the generation script for producing `ebproof.sty`
 - `ebproof.pdf` : the compiled documentation
-- `ebproof.sty` : the generated package
 
 The package requires `expl3` (the LaTeX3 programming environment) which
 provides many useful programming tools.
