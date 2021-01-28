@@ -1,6 +1,6 @@
 % \iffalse meta-comment
 %
-% Copyright (C) 2015-2020 by Emmanuel Beffara
+% Copyright (C) 2015-2021 by Emmanuel Beffara
 %
 % This file may be distributed and/or modified under the conditions of the
 % LaTeX Project Public License, either version 1.3 of this license or (at
@@ -49,7 +49,7 @@
 %     }^^A
 % }
 %
-% \date{Version 2.1 -- Released 2020-08-19}
+% \date{Version 2.1.1 -- Released 2021-01-28}
 %
 % \maketitle
 %
@@ -648,6 +648,13 @@
 % This section lists the principal evolutions of the package, in reverse
 % chronological order.
 % \begin{description}
+% \item[Version 2.1.1 (2021-01-28)]
+%   Bugfix release, no changes in the user interface.
+%   \begin{itemize}
+%   \item Fixes a deprecation issue with \LaTeX3 release 2021-01-09 and
+%     various warnings that appear in \LaTeX3 debugging mode.
+%   \item Fixes \cmd{proof style=downwards}.
+%   \end{itemize}
 % \item[Version 2.1 (2020-08-19)]
 %   Mostly a bugfix release.
 %   \begin{itemize}
@@ -694,7 +701,7 @@
 \NeedsTeXFormat{LaTeX2e}
 \RequirePackage{expl3}
 \RequirePackage{xparse}
-\ProvidesExplPackage{ebproof}{2020/08/19}{2.1}{EB's proof trees}
+\ProvidesExplPackage{ebproof}{2021/01/28}{2.1.1}{EB's proof trees}
 %<@@=ebproof>
 %    \end{macrocode}
 %

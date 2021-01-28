@@ -25,7 +25,7 @@ provides many useful programming tools.
 License
 -------
 
-Copyright 2015-2020 Emmanuel Beffara <manu@beffara.org>
+Copyright 2015-2021 Emmanuel Beffara <manu@beffara.org>
 
 This work may be distributed and/or modified under the
 conditions of the LaTeX Project Public License, either version 1.3
