@@ -829,18 +829,25 @@ label~axis .dim_set:N = \l_@@_label_axis_dim,
 % \begin{macro}{\@@_new:N}
 %   Using only public interfaces forces a convoluted approach to allocation:
 %   we use a global counter \cs{g_ebproof_register_int} to number registers,
-%   then each allocation creates registers named \cs{g_ebproof_K_N} where K is
-%   the kind of component (box or marks) and N is the identifier of the
+%   then each allocation creates registers named \cs{S_ebproof_K_N} where
+%   S is the scope of the register (local or global, deduced from the argument),
+%   K is the kind of component (box or marks) and N is the identifier of the
 %   register. The proof box register itself only contains the identifier used
 %   for indirection.
 %    \begin{macrocode}
 \int_new:N \g_@@_register_int
-\cs_new:Nn \@@_box:N { g__ebproof_box_ \tl_use:N #1 }
-\cs_new:Nn \@@_marks:N { g__ebproof_marks_ \tl_use:N #1 }
+\cs_new:Nn \@@_box:N {
+  \str_item:nn { #1 } { 2 } __ebproof_ \tl_use:N #1 _box
+}
+\cs_new:Nn \@@_marks:N {
+  \str_item:nn { #1 } { 2 } __ebproof_ \tl_use:N #1 _prop
+}
 \cs_new:Nn \@@_new:N {
   \tl_new:N #1
   \int_gincr:N \g_@@_register_int
-  \tl_gset:Nx #1 { \int_to_arabic:n { \g_@@_register_int } }
+  \str_if_eq:eeTF { \str_item:nn { #1 } { 2 } } { g }
+    { \tl_gset:Nx #1 { \int_to_arabic:n { \g_@@_register_int } } }
+    { \tl_set:Nx #1 { \int_to_arabic:n { \g_@@_register_int } } }
   \box_new:c { \@@_box:N #1 }
   \prop_new:c { \@@_marks:N #1 }
 }
@@ -1384,7 +1391,7 @@ label~axis .dim_set:N = \l_@@_label_axis_dim,
 %    \begin{macrocode}
 \cs_new:Nn \@@_new_statement:nnn {
   \exp_args:Nc \NewDocumentCommand { ebproof#1 }{ #2 } { #3 }
-  \seq_put_right:Nn \g_@@_statements_seq { #1 }
+  \seq_gput_right:Nn \g_@@_statements_seq { #1 }
 }
 %    \end{macrocode}
 % \end{macro}
