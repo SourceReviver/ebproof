@@ -704,6 +704,7 @@
 % section~\ref{sec:options}.
 %
 %    \begin{macrocode}
+\bool_new:N \l_@@_updown_bool
 \keys_define:nn { ebproof } {
 center .bool_set:N = \l_@@_center_bool,
 proof~style .choice: ,
@@ -1068,7 +1069,7 @@ label~axis .dim_set:N = \l_@@_label_axis_dim,
 %    \begin{macrocode}
 \cs_new:Nn \@@_append_below:NN {
   \@@_align:NN #1 #2
-  \vbox_set_top:Nn #1 {
+  \vbox_set_top:cn { \@@_box:N #1 } {
     \box_use:c { \@@_box:N #1 }
     \tex_prevdepth:D -1000pt
     \box_use:c { \@@_box:N #2 }
