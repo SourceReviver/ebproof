@@ -1235,7 +1235,7 @@ label~axis .dim_set:N = \l_@@_label_axis_dim,
       \hbox_unpack:N \g_@@_stack_box
       \box_gset_to_last:N \g_tmpa_box
     }
-    \box_set_eq_clear:cN { \@@_box:N #1 } \g_tmpa_box
+    \box_set_eq_drop:cN { \@@_box:N #1 } \g_tmpa_box
     \seq_gpop_left:NN \g_@@_stack_seq \l_tmpa_tl
     \tl_set_eq:cN { \@@_marks:N #1 } \l_tmpa_tl
   } {
